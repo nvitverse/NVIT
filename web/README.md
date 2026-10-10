@@ -1,59 +1,41 @@
-# Taxi
+# Drop Taxi Now – droptaxinow.in
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+Angular 19 (standalone, SSR build, **all pages prerendered**) + small Express server.
+Phone/WhatsApp: 6383269989.
 
-## Development server
-
-To start a local development server, run:
-
+## Commands
 ```bash
-ng serve
+npm install
+npm run build        # prebuild regenerates distances, routes, routes.txt, sitemap.xml, robots.txt, then prerenders 655 pages
+npm run serve        # node dist/taxi/server/server.mjs  (PORT=4000 default)
+npm run test:fare    # fare engine unit tests (node >= 22)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## What is where
+| Path | Purpose |
+|---|---|
+| `src/app/site.config.ts` | Brand, phone, domain, billing rules |
+| `src/app/data/vehicles.json` | **Per-km rates and driver allowance (PLACEHOLDERS – set your real rates)** |
+| `src/app/data/cities.json` | Cities, coordinates, hubs, airports |
+| `src/app/core/fare.ts` | Pure fare formula (unit tested) |
+| `scripts/gen-data.mjs` | Builds distances/routes/sitemap/robots (distance = known highway km, else straight-line × 1.28) |
+| `src/server.ts` | Static serving, caching headers, www→apex 301, trailing-slash 301, real 404, `POST /api/lead` |
 
-## Code scaffolding
+## URL structure
+`/`, `/one-way-taxi/:city`, `/outstation-taxi/:city`, `/airport-taxi/:city`, `/drop-taxi/:from-to-:to`, `/services/:service`, `/tariff`, `/about`, `/contact`, `/faq`, policies.
+Route pages: hub↔hub ≤ 650 km, hub↔other ≤ 350 km (avoids thin doorway pages).
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Environment variables (server only – never commit secrets)
+| Var | Meaning |
+|---|---|
+| `PORT` | HTTP port |
+| `LEADS_FILE` | Where leads are appended (JSON lines). Default `./data/leads.jsonl` |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Optional instant lead alert |
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Before launch checklist
+1. Replace placeholder rates in `vehicles.json` and review distances for key routes (swap in Google Routes data if you want exact km).
+2. Review/finalise Terms, Privacy, Cancellation (marked DRAFT).
+3. Add real reviews only (schema `aggregateRating` is intentionally omitted until real).
+4. Point `droptaxinow.in` DNS to host; 301 `www` → apex is handled in `server.ts`; add `droptaxi4u`/other domains as 301s at DNS/host level.
+5. Search Console: submit `https://droptaxinow.in/sitemap.xml`; add GA4; create Google Business Profile.
+6. Add OG image and Tamil pages (next phase).
