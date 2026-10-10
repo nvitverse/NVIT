@@ -118,7 +118,7 @@ export function apiRouter(): Router {
   });
   r.get('/places/details', async (req, res) => {
     if (limited(req, 'places', 60)) { res.status(429).json({ error: 'Too many requests' }); return; }
-    const d = await details(str(req.query['id'], 200));
+    const d = await details(str(req.query['id'], 200), str(req.query['text'], 200));
     if (d.place) res.json({ place: d.place }); else res.status(422).json({ error: d.error });
   });
   r.get('/places/reverse', async (req, res) => {

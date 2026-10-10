@@ -47,7 +47,7 @@ export class BookingApi {
 
   async details(s: Suggestion): Promise<Place> {
     if (s.local) return s.local;
-    const r = await this.call<{ place: Place }>('/places/details?id=' + encodeURIComponent(s.id));
+    const r = await this.call<{ place: Place }>('/places/details?id=' + encodeURIComponent(s.id) + '&text=' + encodeURIComponent(s.text));
     if (r?.ok && r.data.place) return r.data.place;
     throw new BookingError(r?.data.error || 'Could not load that place. Please pick another.');
   }

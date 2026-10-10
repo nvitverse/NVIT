@@ -89,3 +89,5 @@ input.bad,select.bad{border-color:#b3261e;background:#fff6f5}
 
 @media(max-width:860px){.hero .ticks,.hero .coverage,.hero .hero-cta .btn-ghost-light{display:none}.hero .lead{font-size:1rem}}
 .contact .grid2{grid-template-columns:1fr 1.3fr}.phone{grid-template-columns:88px 1fr}@media(max-width:600px){.contact .grid2{grid-template-columns:1fr}}
+
+.r-head>div{min-width:0}.r-head .link-btn{flex:none;white-space:nowrap}.r-title{overflow-wrap:anywhere}

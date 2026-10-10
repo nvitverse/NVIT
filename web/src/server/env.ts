@@ -3,6 +3,11 @@ const num = (v: string | undefined, d: number) => (v && !isNaN(+v) ? +v : d);
 export const env = {
   get port() { return num(process.env['PORT'], 4000); },
   get mapsKey() { return process.env['GOOGLE_MAPS_SERVER_KEY'] || ''; },
+  /**
+   * Sent as the HTTP Referer on server-side Google calls. Needed when the key is restricted by *website* (HTTP referrer);
+   * ignored by keys restricted by IP address.
+   */
+  get mapsReferer() { return process.env['GOOGLE_MAPS_REFERER'] || 'https://droptaxinow.in/'; },
   get smtp() {
     return {
       host: process.env['SMTP_HOST'] || '', port: num(process.env['SMTP_PORT'], 587),

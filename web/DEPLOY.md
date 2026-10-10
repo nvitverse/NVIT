@@ -30,10 +30,15 @@ PORT=4000 DATA_DIR=/var/lib/dtn pm2 start dist/taxi/server/server.mjs --name dro
 5. Review the DRAFT policy pages (Terms, Privacy, Cancellation).
 6. Run the Google Routes pass (see below) if you want exact km/tolls instead of estimates.
 
-## Google Maps key (the one used on drop1taxi.com)
-The Drop1Taxi key in the browser is *HTTP-referrer restricted* to drop1taxi.com, so it will **not** work from our server.
-Create a server key (or a second key) in Google Cloud Console → *Credentials*, restrict it **by IP address** to the server, enable
-**Places API (New)**, **Routes API** and **Geocoding API**, and set it as `GOOGLE_MAPS_SERVER_KEY`. It is never sent to browsers.
+## Google Maps key
+Set `GOOGLE_MAPS_SERVER_KEY` in the server environment (never commit it). The site calls Google **from the server**, so the key is never sent to browsers.
+
+* **Key restricted by website (HTTP referrer)** – this is what Drop1Taxi uses. It works from our server because the server sends
+  `Referer: https://droptaxinow.in/` (`GOOGLE_MAPS_REFERER`, default already correct). `https://droptaxinow.in/*` must be in the key's allowed websites.
+* **Recommended for production:** create a *second* key restricted **by server IP address** and use that instead (a referrer-restricted key can be abused by anyone who copies it).
+* APIs the key must allow (Cloud Console → Credentials → API restrictions): **Places API (New)**, **Routes API** – verified working – and **Geocoding API**
+  (currently *not enabled* on the Drop1Taxi project; without it "use my current location" falls back to the nearest known city instead of an exact address).
+* Set a budget alert + daily quota in Google Cloud so a traffic spike cannot run up cost. Each fare check = 1 Routes call (cached 6 h per route); each suggestion keystroke batch = 1 Places call.
 
 ## Data you can change without redeploy
 * `DATA_DIR/coupons.json` – promo codes: `[{"code":"WELCOME100","type":"flat","value":100,"active":true,"expires":"2027-03-31"}]`

@@ -8,7 +8,7 @@ export async function suggest(q: string): Promise<Suggestion[]> {
   if (!env.mapsKey || q.trim().length < 3) return local;
   try {
     const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-      method: 'POST', headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': env.mapsKey },
+      method: 'POST', headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': env.mapsKey, Referer: env.mapsReferer },
       body: JSON.stringify({
         input: q, includedRegionCodes: ['in'], languageCode: 'en',
         locationRestriction: { rectangle: { low: { latitude: SOUTH_INDIA_BOUNDS.south, longitude: SOUTH_INDIA_BOUNDS.west }, high: { latitude: SOUTH_INDIA_BOUNDS.north, longitude: SOUTH_INDIA_BOUNDS.east } } }
@@ -20,8 +20,10 @@ export async function suggest(q: string): Promise<Suggestion[]> {
       id: 'g:' + x.placePrediction.placeId, main: x.placePrediction.structuredFormat?.mainText?.text || x.placePrediction.text?.text || '',
       secondary: x.placePrediction.structuredFormat?.secondaryText?.text || '', text: x.placePrediction.text?.text || ''
     }] : []);
+    // The bounding box also covers parts of neighbouring states, so keep only suggestions naming a South Indian state.
+    const south = g.filter((x) => /(tamil nadu|kerala|karnataka|andhra pradesh|telangana|puducherry|pondicherry)/i.test(x.text));
     const seen = new Set(local.map((l) => l.main.toLowerCase()));
-    return [...local, ...g.filter((x) => !seen.has(x.main.toLowerCase()))].slice(0, 8);
+    return [...local, ...south.filter((x) => !seen.has(x.main.toLowerCase()))].slice(0, 8);
   } catch { return local; }
 }
 
@@ -29,7 +31,7 @@ type Comp = { longText?: string; types?: string[] };
 const stateOf = (comps: Comp[] = []) => comps.find((c) => c.types?.includes('administrative_area_level_1'))?.longText;
 const cityMatch = (name: string) => CITIES.find((c) => name.toLowerCase().startsWith(c.name.toLowerCase()));
 
-export async function details(id: string): Promise<{ place?: Place; error?: string }> {
+export async function details(id: string, text?: string): Promise<{ place?: Place; error?: string }> {
   if (id.startsWith('city:')) {
     const c = CITIES.find((x) => x.slug === id.slice(5));
     return c ? { place: placeOfCity(c) } : { error: 'Unknown place' };
@@ -37,11 +39,11 @@ export async function details(id: string): Promise<{ place?: Place; error?: stri
   if (!env.mapsKey || !id.startsWith('g:')) return { error: 'Place lookup unavailable' };
   try {
     const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id.slice(2))}?fields=displayName,formattedAddress,location,addressComponents`, {
-      headers: { 'X-Goog-Api-Key': env.mapsKey }, signal: AbortSignal.timeout(5000) });
+      headers: { 'X-Goog-Api-Key': env.mapsKey, Referer: env.mapsReferer }, signal: AbortSignal.timeout(5000) });
     if (!res.ok) return { error: 'Place lookup failed' };
     const j = (await res.json()) as { displayName?: { text: string }; formattedAddress?: string; location?: { latitude: number; longitude: number }; addressComponents?: Comp[] };
     if (!j.location) return { error: 'Place lookup failed' };
-    return checkRegion({ text: j.formattedAddress || j.displayName?.text || '', lat: j.location.latitude, lng: j.location.longitude,
+    return checkRegion({ text: (text || j.formattedAddress || j.displayName?.text || '').replace(/,\s*India$/i, '').slice(0, 200), lat: j.location.latitude, lng: j.location.longitude,
       state: stateOf(j.addressComponents), citySlug: cityMatch(j.displayName?.text || '')?.slug });
   } catch { return { error: 'Place lookup failed' }; }
 }
@@ -50,7 +52,7 @@ export async function reverse(lat: number, lng: number): Promise<{ place?: Place
   if (!inSouthIndiaBounds(lat, lng)) return { error: 'We currently serve South India only.' };
   if (env.mapsKey) {
     try {
-      const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&region=in&key=${env.mapsKey}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&region=in&key=${env.mapsKey}`, { headers: { Referer: env.mapsReferer }, signal: AbortSignal.timeout(5000) });
       const j = (await res.json()) as { results?: { formatted_address: string; address_components: { long_name: string; types: string[] }[] }[] };
       const r = j.results?.[0];
       if (r) return checkRegion({ text: r.formatted_address, lat, lng,

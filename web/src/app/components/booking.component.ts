@@ -104,7 +104,7 @@ const TIMES = Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2)
     @if (quote(); as q) {
       <div class="result" id="fare-result" aria-live="polite">
         <div class="r-head">
-          <div><b>{{ q.request.pickup.text }}</b>@if (q.request.drop) { <span class="arrow"> → </span><b>{{ q.request.drop.text }}</b> }
+          <div class="r-title"><b>{{ short(q.request.pickup.text) }}</b>@if (q.request.drop) { <span class="arrow"> → </span><b>{{ short(q.request.drop.text) }}</b> }
             <div class="muted small">@if (q.request.service === 'hourly_rental') { {{ q.request.hours }} hrs · {{ q.request.hours! * kmPerHour }} km package } @else { ~{{ q.route.km }} km · ~{{ q.route.durationText }} }
               @if (q.days > 1) { · {{ q.days }} days } @if (q.route.source !== 'package') { · {{ q.route.source === 'google' ? 'Google route distance' : 'Estimated distance' }} }@if (q.route.toll) { · est. toll {{ inr(q.route.toll) }} }</div></div>
           <button type="button" class="link-btn" (click)="edit()">Edit trip</button>
@@ -220,6 +220,8 @@ export class BookingComponent implements OnInit {
     this.busy.set(false);
   }
 
+  /** First two parts of an address, for compact headings (full text is kept in messages/emails). */
+  short = (t: string) => t.split(',').slice(0, 2).join(',').trim();
   selectedName = () => VEHICLES.find((v) => v.id === this.selected())?.name ?? '';
   detail = () => {
     const q = this.quote(); if (!q) return null; const f = q.fares[this.selected()]; const s = summarise(q, this.selected());

@@ -16,7 +16,7 @@ export async function routeFor(points: Place[]): Promise<RouteInfo> {
     try {
       const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': env.mapsKey,
+        headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': env.mapsKey, Referer: env.mapsReferer,
           'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration,routes.travelAdvisory.tollInfo' },
         body: JSON.stringify({
           origin: ll(points[0]), destination: ll(points[points.length - 1]),
