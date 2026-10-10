@@ -25,6 +25,8 @@ export interface TripSummary {
   routeUrl: string; mapsUrl: string; tariffUrl: string; termsUrl: string; cancelUrl: string;
   source: string;
   totalText: string;
+  /** Quoted fare for every cab (used when no cab has been chosen yet, i.e. an enquiry). */
+  allFares: { name: string; total: string; rate: string }[];
 }
 
 export function routePageUrl(pickupSlug?: string, dropSlug?: string): string {
@@ -83,6 +85,7 @@ export function summarise(q: Quote, vehicle: VehicleId, opts: { booking?: Bookin
     routeUrl: routePageUrl(r.pickup.citySlug, r.drop?.citySlug),
     mapsUrl: r.service === 'hourly_rental' ? '' : mapsDirUrl(r.pickup.text, drop, stops),
     tariffUrl: SITE.url + '/tariff', termsUrl: SITE.url + '/terms', cancelUrl: SITE.url + '/cancellation-policy',
-    source: SITE.domain, totalText: inr(f.total)
+    source: SITE.domain, totalText: inr(f.total),
+    allFares: (Object.keys(q.fares) as VehicleId[]).map((v) => ({ name: VEHICLE_META[v].name, total: inr(q.fares[v].total), rate: `${q.fares[v].billableKm} km @ ₹${q.fares[v].perKmRate}` }))
   };
 }

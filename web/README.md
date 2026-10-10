@@ -25,12 +25,22 @@ npm run test:fare    # fare engine unit tests (node >= 22)
 `/`, `/one-way-taxi/:city`, `/outstation-taxi/:city`, `/airport-taxi/:city`, `/drop-taxi/:from-to-:to`, `/services/:service`, `/tariff`, `/about`, `/contact`, `/faq`, policies.
 Route pages: hub↔hub ≤ 650 km, hub↔other ≤ 350 km (avoids thin doorway pages).
 
-## Environment variables (server only – never commit secrets)
-| Var | Meaning |
-|---|---|
-| `PORT` | HTTP port |
-| `LEADS_FILE` | Where leads are appended (JSON lines). Default `./data/leads.jsonl` |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Optional instant lead alert |
+## Booking flow (mirrors drop1taxi service categories)
+Tabs: **Drop Taxi (one way)**, **Round Trip**, **Local Rental (5/8/10/12 h)**, **Multi City (up to 10 stops, reorder)**, **Airport**.
+1. `POST /api/quote` – validates (South India only), computes distance (Google Routes if key set, else offline table), returns fares for all four cabs + an HMAC-signed quote, and records the *enquiry* (`DTN-E-…`) + emails the admin.
+2. `POST /api/confirm` – verifies the signature (prices cannot be edited in the browser), creates the *booking* (`DTN-B-…`), emails customer + admin, notifies Telegram, and (if configured) syncs to the Drop1Taxi admin.
+3. `/thank-you` shows the summary + WhatsApp / WhatsApp Business buttons. Email buttons go to `/whatsapp?to=…&t=…` (chooser page).
+
+Fare rules (same as drop1taxi): one way `max(km,130)×rate + batta`; round trip `max(2×km, 250×days)×rate + batta×days`; hourly `rate×hours` (10 km/h included); multi-city = round-trip rules on the full route + ₹100/extra stop. Km limit, extra-km rate, minimum billing, and "toll/permit/parking extra" are shown in the UI, WhatsApp text and emails.
+
+## Admin panel connection (later)
+`src/server/admin-sync.ts` maps every enquiry/booking to the payload shape of `drop1taxi.com/api/send-enquiry.php` and `confirm_booking.php`
+and adds explicit labels so the admin can separate and invoice these leads: `source=droptaxinow.in`, `brand=Drop Taxi Now`, `brandCode=DTN`,
+`invoiceBrand=Drop Taxi Now`, `invoicePrefix=DTN`, booking IDs prefixed `DTN-`. It is **off** until `ADMIN_SYNC_*_URL` is set.
+The Drop1Taxi PHP endpoint must be updated to read these fields (it does not know them yet) and to accept the `X-DROPCARS-TOKEN` header.
+
+## Environment variables
+See `.env.example` (SMTP, Google key, quote secret, Telegram, admin sync) and `DEPLOY.md`.
 
 ## Before launch checklist
 1. Replace placeholder rates in `vehicles.json` and review distances for key routes (swap in Google Routes data if you want exact km).

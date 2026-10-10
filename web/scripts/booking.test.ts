@@ -31,9 +31,13 @@ test('date/time labels', () => { assert.equal(dateLabel('2026-12-20'), 'Sun, 20 
 
 test('WhatsApp message to business includes km limit, extras, route + policy links, ref', () => {
   const q = mk(), s = summarise(q, 'SEDAN'), m = messageToBusiness(s);
-  for (const needle of ['Fare Enquiry', q.enquiryId, 'Km limit:', 'Extra km', 'extra at actuals', 'google.com/maps/dir', '/drop-taxi/chennai-to-madurai', '/tariff', '/terms', '/cancellation-policy', '*Estimated fare: ₹7,300*', 'Chennai', 'Madurai'])
+  for (const needle of ['Fare Enquiry', q.enquiryId, 'Km limit:', 'Extra km', 'extra at actuals', 'google.com/maps/dir', '/drop-taxi/chennai-to-madurai', '/tariff', '/terms', '/cancellation-policy', '*Estimated fares*', 'Sedan: *₹7,300*', 'Chennai', 'Madurai'])
     assert.ok(m.includes(needle), 'missing: ' + needle);
   assert.ok(m.length < 2500, 'message too long: ' + m.length);
+});
+test('booking message shows the chosen cab fare line', () => {
+  const q = mk(); const b = { bookingId: 'DTN-B-261010-ABCD', enquiryId: q.enquiryId, confirmedAt: new Date().toISOString(), vehicle: 'SEDAN' as const, quote: q };
+  const m = messageToBusiness(summarise(q, 'SEDAN', { booking: b })); assert.ok(m.includes('*Estimated fare: ₹7,300*') && m.includes('*Cab:* Sedan') && m.includes('460 km x ₹15/km'));
 });
 test('booking message says Booking Request and uses booking id', () => {
   const q = mk(); const b = { bookingId: 'DTN-B-261010-ABCD', enquiryId: q.enquiryId, confirmedAt: new Date().toISOString(), vehicle: 'SEDAN' as const, quote: q };
@@ -109,4 +113,11 @@ test('quote token detects tampering', () => {
   const q = mk(), t = signQuote(q); assert.ok(verifyQuote(q, t));
   const evil = JSON.parse(JSON.stringify(q)); evil.fares.SEDAN.total = 1; assert.ok(!verifyQuote(evil, t));
   assert.ok(!verifyQuote(q, 'bogus'));
+});
+
+test('enquiry messages list every cab fare and do not pretend a cab was chosen', () => {
+  const q = mk(), s = summarise(q, 'SEDAN'), m = messageToCustomer(s);
+  assert.ok(m.includes('Estimated fares') && m.includes('SUV') && m.includes('Innova Crysta') && !m.includes('*Cab:*'));
+  const mail = adminLeadEmail(s, q, { kind: 'enquiry' });
+  assert.ok(mail.html.includes('Not selected yet') && mail.subject.includes('from ₹7,300'));
 });

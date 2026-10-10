@@ -39,6 +39,13 @@ function tripBlock(s: TripSummary): string[] {
 }
 function fareBlock(s: TripSummary): string[] {
   const l: string[] = [];
+  if (s.kind === 'enquiry') {
+    l.push(`${E.money} *Estimated fares*`);
+    s.allFares.forEach((x) => l.push(`   • ${x.name}: *${x.total}* (${x.rate})`));
+    l.push(`*Km limit:* ${s.kmPolicy.replace(/^Fare covers/, 'Fares cover')}`);
+    l.push(`${E.warn} ${s.extrasNote}`);
+    return l;
+  }
   l.push(`${E.car} *Cab:* ${s.vehicleName} (${s.vehicleModels})${s.passengers ? ' · ' + s.passengers + ' passengers' : ''}`);
   l.push(`${E.money} *Estimated fare: ${s.totalText}*`);
   s.lines.forEach((x) => l.push(`   • ${x.label}: ${x.value}`));

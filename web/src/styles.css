@@ -76,3 +76,16 @@ input.bad,select.bad{border-color:#b3261e;background:#fff6f5}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}textarea{font:inherit}
 @media(max-width:860px){.wa-fab{display:none}.wa-panel{bottom:70px;right:12px}}
 @media(max-width:600px){.grid3{grid-template-columns:1fr 1fr}.loc-grid{grid-template-columns:1fr}.loc-grid>.field{grid-column:auto}.swap{justify-self:center;transform:rotate(0)}.opts{grid-template-columns:1fr}.vopt{grid-template-columns:64px 1fr auto}.vicon{width:64px}.grid2{grid-template-columns:1fr}}
+
+/* ---------- layout fixes & home polish ---------- */
+.hero-grid>*{min-width:0}.book{min-width:0;max-width:100%}.wrap{overflow-wrap:anywhere}
+.ftr-contact a{display:inline-block;margin-right:14px;padding:3px 0;font-weight:600;color:#fff}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap}.btn-ghost-light{background:transparent;color:#fff;border:2px solid #ffffff80}.btn-ghost-light:hover{background:#fff;color:var(--teal)}
+.coverage{font-size:.9rem;color:#cfe3e0;margin-top:18px}.coverage b{color:var(--amber)}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.svc{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);transition:transform .15s,box-shadow .15s}.svc:hover{transform:translateY(-2px);box-shadow:0 10px 24px #0b3d3a1f;border-color:var(--teal2)}
+.svc-ico{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#eef6f4;color:var(--teal);font-size:1.2rem;margin-bottom:4px}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.why{border-left:4px solid var(--amber);padding:4px 0 4px 14px}.why p{margin:4px 0 0}
+@media(max-width:860px){.hero{padding-top:20px}.tabs button{padding:11px 12px;font-size:.9rem}}
+
+@media(max-width:860px){.hero .ticks,.hero .coverage,.hero .hero-cta .btn-ghost-light{display:none}.hero .lead{font-size:1rem}}
+.contact .grid2{grid-template-columns:1fr 1.3fr}.phone{grid-template-columns:88px 1fr}@media(max-width:600px){.contact .grid2{grid-template-columns:1fr}}

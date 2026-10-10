@@ -106,7 +106,7 @@ const TIMES = Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2)
         <div class="r-head">
           <div><b>{{ q.request.pickup.text }}</b>@if (q.request.drop) { <span class="arrow"> → </span><b>{{ q.request.drop.text }}</b> }
             <div class="muted small">@if (q.request.service === 'hourly_rental') { {{ q.request.hours }} hrs · {{ q.request.hours! * kmPerHour }} km package } @else { ~{{ q.route.km }} km · ~{{ q.route.durationText }} }
-              @if (q.days > 1) { · {{ q.days }} days } · {{ q.route.source === 'google' ? 'Google route' : 'Estimated distance' }}@if (q.route.toll) { · est. toll {{ inr(q.route.toll) }} }</div></div>
+              @if (q.days > 1) { · {{ q.days }} days } @if (q.route.source !== 'package') { · {{ q.route.source === 'google' ? 'Google route distance' : 'Estimated distance' }} }@if (q.route.toll) { · est. toll {{ inr(q.route.toll) }} }</div></div>
           <button type="button" class="link-btn" (click)="edit()">Edit trip</button>
         </div>
         @if (q.coupon && !q.coupon.applied) { <p class="err small">{{ q.coupon.message }}</p> }

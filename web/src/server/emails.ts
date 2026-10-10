@@ -40,7 +40,7 @@ function tripCard(s: TripSummary): string {
   r += row('Pickup date & time', `${esc(s.dateText)}${s.timeText ? ' · ' + esc(s.timeText) : ''}`);
   if (s.returnText) r += row('Return', esc(s.returnText));
   r += row('Distance', esc(s.distanceText) + (s.durationText && !s.distanceText.includes('package') ? ` · ${esc(s.durationText)}` : ''));
-  r += row('Cab', `${esc(s.vehicleName)} <span style="color:${MUTED}">(${esc(s.vehicleModels)})</span>${s.passengers ? ' · ' + s.passengers + ' passengers' : ''}`);
+  r += row('Cab', s.kind === 'enquiry' ? `<span style="color:${MUTED}">Not selected yet – all cabs quoted below</span>${s.passengers ? ' · ' + s.passengers + ' passengers' : ''}` : `${esc(s.vehicleName)} <span style="color:${MUTED}">(${esc(s.vehicleModels)})</span>${s.passengers ? ' · ' + s.passengers + ' passengers' : ''}`);
   return card('Trip details', `<table width="100%" cellpadding="0" cellspacing="0">${r}</table>`);
 }
 function fareCard(s: TripSummary): string {
@@ -86,10 +86,11 @@ export function adminLeadEmail(s: TripSummary, q: Quote, meta: { kind: 'enquiry'
   const a = q.request.attribution ?? {};
   const meta2 = card('Lead source', `<table width="100%" cellpadding="0" cellspacing="0">${row('Website', `<b>${esc(SITE.brand)}</b> (${esc(SITE.domain)})`)}${row('Page', esc(a.page || '-'))}${row('Device', esc(a.device || '-'))}${row('UTM', esc([a.utmSource, a.utmMedium, a.utmCampaign].filter(Boolean).join(' / ') || '-'))}${row('Distance source', esc(q.route.source))}${meta.ip ? row('IP', esc(meta.ip)) : ''}</table>`);
   const label = meta.kind === 'booking' ? 'NEW BOOKING' : 'NEW ENQUIRY';
-  const html = shell(`${label} ${s.ref} · ${c.name} · ${s.totalText}`, `${SITE.domain} · ${label}`, `${label}: ${s.pickup.split(',')[0]} → ${(s.drop || 'Rental').split(',')[0]} · ${s.totalText}`,
-    `Received from <b>${esc(SITE.brand)}</b> (<b>${esc(SITE.domain)}</b>). Reference <b>${esc(s.ref)}</b>.`, contact + tripCard(s) + fareCard(s) + allFares + meta2);
+  const price = meta.kind === 'booking' ? s.totalText : `from ${q.fares.SEDAN ? s.allFares[0].total : s.totalText}`;
+  const html = shell(`${label} ${s.ref} · ${c.name} · ${price}`, `${SITE.domain} · ${label}`, `${label}: ${s.pickup.split(',')[0]} → ${(s.drop || 'Rental').split(',')[0]} · ${price}`,
+    `Received from <b>${esc(SITE.brand)}</b> (<b>${esc(SITE.domain)}</b>). Reference <b>${esc(s.ref)}</b>.`, contact + tripCard(s) + (meta.kind === 'booking' ? fareCard(s) : card('Km limit & extras', `<p style="margin:0 0 6px;font-size:13px;line-height:1.5"><b>Km limit:</b> ${esc(s.kmPolicy)}</p><p style="margin:0;font-size:13px;color:${MUTED}">${esc(s.extrasNote)}</p>`)) + allFares + meta2);
   const text = [`${label} from ${SITE.brand} (${SITE.domain})`, '', toCust, '', `Customer: ${c.name} ${c.phoneDisplay} ${c.email}`, `WhatsApp customer: ${waLink(c.waIntl || c.phoneIntl, toCust)}`, `WhatsApp Business chooser: ${chooserUrl(c.waIntl || c.phoneIntl, toCust)}&app=business`].join('\n');
-  return { subject: `[${SITE.brand}] ${label} ${s.ref} – ${s.pickup.split(',')[0]} → ${(s.drop || 'Rental').split(',')[0]} – ${s.totalText}`, html, text };
+  return { subject: `[${SITE.brand}] ${label} ${s.ref} – ${s.pickup.split(',')[0]} → ${(s.drop || 'Rental').split(',')[0]} – ${price}`, html, text };
 }
 
 export function vendorLeadEmail(v: { name: string; phone: string; city: string; vehicle: string; vehicleNo?: string; message?: string; ref: string }): Mail {

@@ -31,7 +31,7 @@ import { generalMessage } from './core/whatsapp';
         <div>
           <p class="logo light"><span class="logo-mark">DT</span><span>Drop Taxi <b>Now</b></span></p>
           <p>{{ site.tagline }}.</p>
-          <p><a [href]="'tel:' + site.phoneIntl">{{ site.phone }}</a> · <a [href]="'https://wa.me/' + site.whatsapp">WhatsApp</a></p>
+          <p class="ftr-contact"><a [href]="'tel:' + site.phoneIntl">Call {{ site.phone }}</a> <a [href]="'https://wa.me/' + site.whatsapp">WhatsApp us</a></p>
         </div>
         <div><h3>Services</h3>
           <a routerLink="/services/one-way-taxi">One way taxi</a><a routerLink="/services/drop-taxi">Drop taxi</a>

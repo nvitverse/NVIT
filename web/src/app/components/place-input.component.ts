@@ -82,13 +82,14 @@ export class PlaceInputComponent {
   }
   async pick(s: Suggestion, ev?: Event): Promise<void> {
     ev?.preventDefault();
+    clearTimeout(this.timer); this.seq++; // cancel any pending suggestion fetch so the list does not reopen
     this.open.set(false); this.msg.set('');
     try {
       const p = await this.api.details(s);
       this._place = p; this.text = p.text; this.placeChange.emit(p);
     } catch (e) { this.msg.set(e instanceof BookingError ? e.message : 'Could not load that place.'); this.text = ''; }
   }
-  clear(): void { this._place = null; this.text = ''; this.msg.set(''); this.items.set([]); this.open.set(false); this.placeChange.emit(null); this.inp?.nativeElement.focus(); }
+  clear(): void { clearTimeout(this.timer); this.seq++; this._place = null; this.text = ''; this.msg.set(''); this.items.set([]); this.open.set(false); this.placeChange.emit(null); this.inp?.nativeElement.focus(); }
 
   useMyLocation(): void {
     if (!navigator.geolocation) { this.msg.set('Location is not supported on this device.'); return; }

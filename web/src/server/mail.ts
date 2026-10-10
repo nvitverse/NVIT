@@ -15,12 +15,12 @@ export const mailConfigured = () => !!getTransport() && !!env.mailFrom;
 /** Sends via SMTP. When SMTP is not configured the email is written to DATA_DIR/outbox (so nothing is lost in dev/preview). */
 export async function sendMail(to: string[], mail: Mail, opts: { replyTo?: string; tag: string }): Promise<{ sent: boolean; error?: string }> {
   const recipients = to.filter(Boolean);
-  if (!recipients.length) return { sent: false, error: 'no recipients' };
   const t = getTransport();
+  if (!recipients.length && t) { console.warn(`[mail] no recipients for ${opts.tag}; set ADMIN_EMAILS`); return { sent: false, error: 'no recipients' }; }
   if (!t || !env.mailFrom) {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    writeOutbox(`${stamp}-${opts.tag}.html`, `<!-- to: ${recipients.join(', ')} | subject: ${mail.subject} -->\n${mail.html}`);
-    writeOutbox(`${stamp}-${opts.tag}.txt`, `to: ${recipients.join(', ')}\nsubject: ${mail.subject}\n\n${mail.text}`);
+    writeOutbox(`${stamp}-${opts.tag}.html`, `<!-- to: ${recipients.join(', ') || '(none - set ADMIN_EMAILS)'} | subject: ${mail.subject} -->\n${mail.html}`);
+    writeOutbox(`${stamp}-${opts.tag}.txt`, `to: ${recipients.join(', ') || '(none - set ADMIN_EMAILS)'}\nsubject: ${mail.subject}\n\n${mail.text}`);
     return { sent: false, error: 'SMTP not configured (saved to outbox)' };
   }
   try {
