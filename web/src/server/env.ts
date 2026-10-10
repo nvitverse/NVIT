@@ -1,3 +1,5 @@
+import { homedir } from 'node:os';
+
 /** All configuration comes from environment variables (never committed). */
 const num = (v: string | undefined, d: number) => (v && !isNaN(+v) ? +v : d);
 export const env = {
@@ -32,7 +34,8 @@ export const env = {
   /** IndexNow key (Bing/Yandex/Seznam instant indexing). Served at /<key>.txt */
   get indexNowKey() { return (process.env['INDEXNOW_KEY'] || '').replace(/[^a-zA-Z0-9-]/g, ''); },
   get quoteSecret() { return process.env['QUOTE_SECRET'] || ''; },
-  get dataDir() { return process.env['DATA_DIR'] || process.cwd() + '/data'; },
+  /** Folder for leads/outbox. `~/x` means the hosting account's home folder (outside the app folder, so redeploys keep it). */
+  get dataDir() { const d = process.env['DATA_DIR'] || process.cwd() + '/data'; return d.startsWith('~') ? homedir() + d.slice(1) : d; },
   get telegramToken() { return process.env['TELEGRAM_BOT_TOKEN'] || ''; },
   get telegramChat() { return process.env['TELEGRAM_CHAT_ID'] || ''; },
   /** Later: forward leads/bookings to the Drop1Taxi admin panel. Off unless ADMIN_SYNC_URL is set. */
