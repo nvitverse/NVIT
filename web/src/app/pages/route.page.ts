@@ -27,8 +27,8 @@ import { NotFoundPage } from './notfound.page';
     </div></section>
 
     <section class="wrap sec"><h2>{{ r.from.name }} to {{ r.to.name }} taxi fare</h2>
-      <div class="table-wrap"><table><thead><tr><th>Cab</th><th>Seats</th><th>One way fare</th></tr></thead><tbody>
-        @for (v of vehicles; track v.id) { <tr><td>{{ v.name }}</td><td>{{ v.seats }}</td><td><b>{{ inr(fareFor(v, r.km).total) }}</b></td></tr> }
+      <div class="table-wrap"><table><thead><tr><th>Cab</th><th>Seats</th><th>One way fare</th><th>Km limit</th></tr></thead><tbody>
+        @for (v of vehicles; track v.id) { <tr><td>{{ v.name }}</td><td>{{ v.seatsLabel }}</td><td><b>{{ inr(fareFor(v.id, r.km).total) }}</b></td><td class="small muted">up to {{ fareFor(v.id, r.km).billableKm }} km, extra {{ inr(fareFor(v.id, r.km).extraKmRate) }}/km</td></tr> }
       </tbody></table></div>
       <p class="muted small">Based on {{ r.km }} km one-way distance and per-km rate plus driver allowance. Toll, state permit & parking extra at actuals.</p>
       <p>{{ c.tip }}</p>

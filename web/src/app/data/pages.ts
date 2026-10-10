@@ -29,7 +29,7 @@ export const PAGES: StaticPage[] = [
     sections: [{ h: 'What we do', p: `${SITE.brand} connects travellers with one-way and outstation cabs between cities in Tamil Nadu, Pondicherry, Bangalore and Tirupati. You see the fare before you book and pay only for the distance you travel.` },
       { h: 'How we work', p: 'Share pickup, drop and date. We confirm the vehicle and fare, and send driver and car details before pickup.' }] },
   { key: 'contact', path: '/contact', title: `Contact ${SITE.brand} | Call ${P}`, h1: 'Contact us', desc: `Call or WhatsApp ${P} to book a one way drop taxi or outstation cab. Available 24/7.`,
-    sections: [{ h: 'Call or WhatsApp', p: `Phone and WhatsApp: ${P}. We take bookings 24/7.` }, { h: 'Base', p: `${SITE.base}.` }] },
+    sections: [{ h: 'Call or WhatsApp', p: `Phone and WhatsApp: ${P}. We take bookings 24/7.` }, { h: 'Service area', p: 'Tamil Nadu, Kerala, Karnataka, Andhra Pradesh, Telangana and Puducherry.' }] },
   { key: 'faq', path: '/faq', title: `Drop Taxi FAQ | ${SITE.brand}`, h1: 'Frequently asked questions', desc: 'Answers on one way taxi fares, tolls, permits, cancellation and booking.', sections: [] },
   { key: 'terms', path: '/terms', title: `Terms & Conditions | ${SITE.brand}`, h1: 'Terms & conditions', desc: `Booking terms for ${SITE.brand}.`,
     sections: [{ h: 'Fares', p: 'Fares are quoted per kilometre plus driver allowance. Tolls, state permit, parking and hill-station charges are extra at actuals.' }, { h: 'Minimum billing', p: `One way trips are billed for a minimum of 130 km. Round trips are billed on the higher of 250 km per day or actual distance.` }, { h: 'Draft notice', p: 'DRAFT: have this page reviewed and finalised by the business owner before launch.' }] },

@@ -55,8 +55,8 @@ export class SeoService {
     return {
       '@context': 'https://schema.org', '@type': ['TaxiService', 'LocalBusiness'], '@id': SITE.url + '/#business',
       name: SITE.brand, url: SITE.url, telephone: SITE.phoneIntl, priceRange: '₹₹',
-      areaServed: ['Tamil Nadu', 'Puducherry', 'Karnataka', 'Andhra Pradesh'],
-      address: { '@type': 'PostalAddress', addressLocality: 'Chennai', addressRegion: 'Tamil Nadu', addressCountry: 'IN' },
+      areaServed: ['Tamil Nadu', 'Puducherry', 'Kerala', 'Karnataka', 'Andhra Pradesh', 'Telangana'],
+      ...(SITE.address ? { address: { '@type': 'PostalAddress', streetAddress: SITE.address.street, addressLocality: SITE.address.locality, addressRegion: SITE.address.region, postalCode: SITE.address.postalCode, addressCountry: 'IN' } } : {}),
       openingHoursSpecification: { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], opens: '00:00', closes: '23:59' }
     };
   }

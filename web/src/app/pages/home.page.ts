@@ -4,7 +4,7 @@ import { SeoService } from '../core/seo.service';
 import { BookingComponent } from '../components/booking.component';
 import { FleetComponent } from '../components/fleet.component';
 import { FaqComponent } from '../components/faq.component';
-import { CITIES, HUBS, ROUTE_MAP, inr, fareFor, VEHICLES } from '../data';
+import { CITIES, ROUTE_MAP, inr, fareFor } from '../data';
 import { GENERAL_FAQ } from '../data/pages';
 import { SITE } from '../site.config';
 
@@ -42,7 +42,7 @@ const POPULAR = ['chennai-to-bangalore', 'bangalore-to-chennai', 'chennai-to-mad
 })
 export class HomePage {
   site = SITE; cities = CITIES; inr = inr; faqs = GENERAL_FAQ;
-  popular = POPULAR.map((s) => ROUTE_MAP.get(s)).filter((r) => !!r).map((r) => ({ ...r!, price: fareFor(VEHICLES[0], r!.km).total }));
+  popular = POPULAR.map((s) => ROUTE_MAP.get(s)).filter((r) => !!r).map((r) => ({ ...r!, price: fareFor('SEDAN', r!.km).total }));
   constructor() {
     inject(SeoService).set({
       title: `One Way Drop Taxi in Tamil Nadu, Bangalore & Pondicherry | ${SITE.brand}`,

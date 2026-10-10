@@ -1,0 +1,14 @@
+{
+  "_note": "Rates mirror the live drop1taxi.com configuration. Edit here to change pricing site-wide.",
+  "minOneWayKm": 130,
+  "minRoundKmPerDay": 250,
+  "multiCityStopCharge": 100,
+  "kmPerHour": 10,
+  "hourlyPackages": [5, 8, 10, 12],
+  "vehicles": {
+    "SEDAN":  { "oneway": 15, "round": 13, "bataOne": 400, "bataRound": 400, "hourly": 300 },
+    "SUV":    { "oneway": 20, "round": 18, "bataOne": 500, "bataRound": 400, "hourly": 400 },
+    "INNOVA": { "oneway": 20, "round": 19, "bataOne": 500, "bataRound": 500, "hourly": 450 },
+    "CRYSTA": { "oneway": 24, "round": 22, "bataOne": 500, "bataRound": 600, "hourly": 600 }
+  }
+}

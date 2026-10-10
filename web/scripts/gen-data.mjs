@@ -18,7 +18,16 @@ const KNOWN = {
   'chennai|rameswaram': 565, 'chennai|kodaikanal': 520, 'bangalore|salem': 205, 'bangalore|vellore': 215,
   'bangalore|tirupati': 250, 'madurai|rameswaram': 175, 'coimbatore|madurai': 215, 'coimbatore|salem': 165,
   'salem|trichy': 140, 'pondicherry|trichy': 195, 'tirupati|tirumala': 25, 'madurai|tirunelveli': 155,
-  'kanyakumari|tirunelveli': 85, 'bangalore|hosur': 40, 'bangalore|ooty': 280
+  'kanyakumari|tirunelveli': 85, 'bangalore|hosur': 40, 'bangalore|ooty': 280,
+  'kochi|trivandrum': 205, 'coimbatore|kochi': 195, 'bangalore|hyderabad': 570, 'chennai|hyderabad': 630,
+  'bangalore|mangalore': 350, 'bangalore|kochi': 550, 'madurai|trivandrum': 300, 'kanyakumari|trivandrum': 90,
+  'chennai|vijayawada': 450, 'chennai|nellore': 175, 'mysore|ooty': 125, 'coimbatore|palakkad': 55, 'kochi|munnar': 130,
+  'coimbatore|pollachi': 40, 'karaikudi|madurai': 90, 'chennai|chidambaram': 235, 'chidambaram|pondicherry': 65,
+  'chennai|mahabalipuram': 55, 'chennai|velankanni': 330, 'thanjavur|trichy': 60, 'kodaikanal|madurai': 120,
+  'madurai|thanjavur': 175, 'coimbatore|mettupalayam': 35, 'coimbatore|valparai': 100, 'kochi|thrissur': 80,
+  'kochi|alappuzha': 60, 'kochi|kottayam': 65, 'coimbatore|thrissur': 140, 'kochi|palakkad': 140, 'calicut|kochi': 190,
+  'mysore|calicut': 195, 'bangalore|madikeri': 245, 'coimbatore|munnar': 165, 'madurai|thekkady': 140,
+  'bangalore|visakhapatnam': 1000
 };
 
 const rad = (d) => (d * Math.PI) / 180;
@@ -41,8 +50,8 @@ for (const a of cities)
   for (const b of cities) {
     if (a.slug === b.slug || !(a.hub || b.hub)) continue;
     const km = distances[key(a.slug, b.slug)];
-    // Quality over quantity: avoid thin doorway-style pages. Hub<->hub up to 650 km, hub<->other up to 350 km.
-    if (km < 60 || km > (a.hub && b.hub ? 650 : 350)) continue;
+    // Quality over quantity: avoid thin doorway-style pages. Hub<->hub up to 650 km, hub<->other up to 260 km.
+    if (km < 60 || km > (a.hub && b.hub ? 650 : 260)) continue;
     routes.push({ from: a.slug, to: b.slug, km });
   }
 
@@ -52,7 +61,7 @@ writeFileSync(join(dataDir, 'distances.json'), JSON.stringify(distances));
 writeFileSync(join(dataDir, 'routes.json'), JSON.stringify(routes));
 
 const staticPaths = ['/', '/one-way-taxi', '/drop-taxi', '/outstation-taxi', '/airport-taxi', '/services', '/tariff', '/about',
-  '/contact', '/faq', '/terms', '/privacy-policy', '/cancellation-policy', '/sitemap'];
+  '/contact', '/faq', '/attach-taxi', '/terms', '/privacy-policy', '/cancellation-policy', '/sitemap'];
 const services = ['one-way-taxi', 'drop-taxi', 'outstation-taxi', 'round-trip-taxi', 'airport-transfer', 'local-rental'];
 const paths = [
   ...staticPaths,
@@ -63,7 +72,7 @@ const paths = [
   ...routes.map((r) => `/drop-taxi/${r.from}-to-${r.to}`)
 ];
 
-writeFileSync(join(root, 'routes.txt'), [...paths, '/404'].join('\n') + '\n'); // /404 is prerendered for the server's real-404 response
+writeFileSync(join(root, 'routes.txt'), [...paths, '/404', '/thank-you', '/whatsapp'].join('\n') + '\n'); // /404 is prerendered for the server's real-404 response
 const today = new Date().toISOString().slice(0, 10);
 const prio = (p) => (p === '/' ? '1.0' : p.startsWith('/drop-taxi/') ? '0.6' : p.split('/').length === 2 ? '0.8' : '0.7');
 const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +

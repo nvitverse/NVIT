@@ -19,6 +19,9 @@ export const routes: Routes = [
   { path: 'terms', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'terms' } },
   { path: 'privacy-policy', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'privacy' } },
   { path: 'cancellation-policy', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'cancellation' } },
+  { path: 'attach-taxi', loadComponent: () => import('./pages/attach.page').then((m) => m.AttachPage) },
+  { path: 'thank-you', loadComponent: () => import('./pages/thankyou.page').then((m) => m.ThankYouPage) },
+  { path: 'whatsapp', loadComponent: () => import('./pages/whatsapp.page').then((m) => m.WhatsappPage) },
   { path: 'sitemap', loadComponent: () => import('./pages/sitemap.page').then((m) => m.SitemapPage) },
   { path: '**', loadComponent: () => import('./pages/notfound.page').then((m) => m.NotFoundPage) }
 ];

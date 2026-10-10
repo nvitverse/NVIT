@@ -4,18 +4,16 @@ import { SITE } from '../site.config';
 export interface QA { q: string; a: string }
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const pick = <T>(arr: T[], seed: string) => arr[hash(seed) % arr.length];
-const sedan = VEHICLES[0];
-const innova = VEHICLES.find((v) => v.id === 'innova')!;
 
 export function routeContent(r: Route) {
   const { from, to, km } = r;
   const dur = durationText(km);
-  const s = fareFor(sedan, km), i = fareFor(innova, km);
+  const s = fareFor('SEDAN', km), i = fareFor('INNOVA', km);
   const long = km > 300;
   const intro = pick([
     `Need a one-way cab from ${from.name} to ${to.name}? ${SITE.brand} drops you the ${km} km distance in about ${dur}, and you pay only for the one-way trip, not the empty return.`,
     `Planning to travel from ${from.name} to ${to.name}? Our ${from.name} to ${to.name} drop taxi covers roughly ${km} km (${dur}) with a clear per-km fare and a driver confirmed before pickup.`,
-    `${from.name} to ${to.name} is about ${km} km by road, around ${dur} of driving. Book a drop taxi and pay one-way fare only, starting from ${inr(s.total)} in a ${sedan.short.toLowerCase()}.`
+    `${from.name} to ${to.name} is about ${km} km by road, around ${dur} of driving. Book a drop taxi and pay one-way fare only, starting from ${inr(s.total)} in a sedan.`
   ], r.slug);
   const tip = long
     ? `Because this is a long ${km} km drive, an early-morning start helps you avoid city traffic, and we recommend a short break at a highway restaurant around the halfway mark.`
@@ -37,7 +35,7 @@ export function cityContent(c: City, mode: 'oneway' | 'outstation' | 'airport') 
   const faqs: QA[] = [
     { q: `How do I book a ${mode === 'airport' ? 'airport' : mode === 'outstation' ? 'outstation' : 'one way'} taxi in ${c.name}?`, a: `Fill the booking form or call ${SITE.phone}. Share pickup, drop, date and time and we confirm the cab and fare.` },
     { q: `Is a one-way drop from ${c.name} cheaper than a round trip?`, a: `Usually yes, when you do not need the cab for the return. You pay only the one-way distance instead of a full round trip.` },
-    { q: `Which cars are available in ${c.name}?`, a: `${VEHICLES.map((v) => v.short).join(', ')}.` },
+    { q: `Which cars are available in ${c.name}?`, a: `${VEHICLES.map((v) => v.name).join(', ')}.` },
     { q: `Are tolls included in the fare?`, a: `No. Toll, state permit, parking and hill-station charges are extra at actuals.` }
   ];
   return { routes, nearest, faqs };

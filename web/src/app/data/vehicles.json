@@ -1,7 +1,6 @@
 [
-{"id":"sedan","name":"Sedan (Dzire / Etios / Aura)","short":"Sedan","seats":4,"bags":2,"onewayRate":14,"roundRate":13,"batta":400,"minNote":"AC sedan, ideal for 1–4 passengers","examples":"Swift Dzire, Toyota Etios, Hyundai Aura"},
-{"id":"ertiga","name":"SUV (Ertiga / Xylo)","short":"SUV","seats":6,"bags":3,"onewayRate":18,"roundRate":17,"batta":450,"minNote":"Spacious 6-seater for families","examples":"Maruti Ertiga, Mahindra Xylo"},
-{"id":"innova","name":"Toyota Innova","short":"Innova","seats":7,"bags":4,"onewayRate":21,"roundRate":20,"batta":500,"minNote":"Comfortable 7-seater, great for long highway drives","examples":"Toyota Innova"},
-{"id":"crysta","name":"Innova Crysta","short":"Crysta","seats":7,"bags":4,"onewayRate":24,"roundRate":22,"batta":500,"minNote":"Premium 7-seater with captain seats","examples":"Toyota Innova Crysta"},
-{"id":"tempo","name":"Tempo Traveller (12–17 seater)","short":"Tempo Traveller","seats":17,"bags":10,"onewayRate":36,"roundRate":33,"batta":700,"minNote":"Groups, weddings and pilgrimages","examples":"Force Tempo Traveller"}
+{"id":"SEDAN","name":"Sedan","models":"Swift Dzire / Etios","seats":4,"seatsLabel":"4+1","bags":3,"ac":true,"tag":"Popular","blurb":"Best value for 1–4 passengers"},
+{"id":"SUV","name":"SUV","models":"Maruti Ertiga / Kia Carens","seats":6,"seatsLabel":"6+1","bags":5,"ac":true,"tag":"Family","blurb":"Roomy 6-seater with extra luggage space"},
+{"id":"INNOVA","name":"Innova","models":"Toyota Innova","seats":7,"seatsLabel":"7+1","bags":6,"ac":true,"tag":"Comfort","blurb":"Comfortable 7-seater for long highway drives"},
+{"id":"CRYSTA","name":"Innova Crysta","models":"Toyota Innova Crysta","seats":7,"seatsLabel":"7+1","bags":6,"ac":true,"tag":"Premium","blurb":"Premium 7-seater with captain-style comfort"}
 ]

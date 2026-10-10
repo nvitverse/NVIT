@@ -6,7 +6,7 @@ import { BookingComponent } from '../components/booking.component';
 import { FleetComponent } from '../components/fleet.component';
 import { FaqComponent } from '../components/faq.component';
 import { CrumbsComponent } from '../components/crumbs.component';
-import { CITY_MAP, City, Route, inr, fareFor, VEHICLES } from '../data';
+import { CITY_MAP, City, Route, inr, fareFor } from '../data';
 import { SITE } from '../site.config';
 import { NotFoundPage } from './notfound.page';
 
@@ -34,7 +34,7 @@ const META: Record<Mode, { base: string; label: string }> = {
 
     <section class="wrap sec"><h2>Popular routes from {{ city.name }}</h2>
       <div class="chips">@for (r of top; track r.slug) {
-        <a class="card chip" [routerLink]="['/drop-taxi', r.slug]"><b>{{ r.from.name }} → {{ r.to.name }}</b><span class="muted">{{ r.km }} km</span><span class="price-sm">from {{ inr(fareFor(sedan, r.km).total) }}</span></a> }</div></section>
+        <a class="card chip" [routerLink]="['/drop-taxi', r.slug]"><b>{{ r.from.name }} → {{ r.to.name }}</b><span class="muted">{{ r.km }} km</span><span class="price-sm">from {{ inr(fareFor('SEDAN', r.km).total) }}</span></a> }</div></section>
 
     <section class="band"><div class="wrap sec"><h2>Cabs available in {{ city.name }}</h2><app-fleet /></div></section>
 
@@ -47,7 +47,7 @@ const META: Record<Mode, { base: string; label: string }> = {
   } @else { <app-notfound /> }`
 })
 export class CityPage {
-  site = SITE; inr = inr; fareFor = fareFor; sedan = VEHICLES[0];
+  site = SITE; inr = inr; fareFor = fareFor;
   city?: City; h1 = ''; intro = ''; modeLabel = ''; top: Route[] = []; faqs: QA[] = [];
   crumbs: { name: string; path: string }[] = [];
   private seo = inject(SeoService);

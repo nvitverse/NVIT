@@ -1,21 +1,17 @@
 import citiesJson from './cities.json';
-import vehiclesJson from './vehicles.json';
 import routesJson from './routes.json';
 import distancesJson from './distances.json';
-import { computeFare, FareResult, TripType } from '../core/fare';
+import { FareBreakdown, ServiceType, VehicleId, computeFare } from '../core/fare';
+import { FARES } from '../core/fares';
+export { VEHICLES, VEHICLE_META } from '../core/vehicles-meta';
 import { SITE } from '../site.config';
 
 export interface City {
   slug: string; name: string; state: string; lat: number; lng: number; hub: boolean; airport: string; known: string;
 }
-export interface Vehicle {
-  id: string; name: string; short: string; seats: number; bags: number; onewayRate: number; roundRate: number;
-  batta: number; minNote: string; examples: string;
-}
 export interface Route { from: City; to: City; km: number; slug: string; }
 
 export const CITIES = citiesJson as City[];
-export const VEHICLES = vehiclesJson as Vehicle[];
 export const CITY_MAP = new Map(CITIES.map((c) => [c.slug, c]));
 const DIST = distancesJson as Record<string, number>;
 
@@ -37,8 +33,9 @@ export const durationText = (km: number) => {
 };
 export const inr = (n: number) => '₹' + Math.round(n).toLocaleString('en-IN');
 
-export function fareFor(vehicle: Vehicle, km: number, trip: TripType = 'oneway', days = 1): FareResult {
-  return computeFare({ km, trip, days, vehicle });
+export function fareFor(vehicle: VehicleId, km: number, service: ServiceType = 'one_way', days = 1, hours = 8): FareBreakdown {
+  return computeFare({ service, vehicle, km, days, hours }, FARES);
 }
+export const rateOf = (v: VehicleId) => FARES.vehicles[v];
 export const routesFrom = (slug: string) => ROUTES.filter((r) => r.from.slug === slug);
 export const routesTo = (slug: string) => ROUTES.filter((r) => r.to.slug === slug);
