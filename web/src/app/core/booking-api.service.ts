@@ -62,6 +62,17 @@ export class BookingApi {
     throw new BookingError('Could not find a nearby city. Please type your pickup location.');
   }
 
+  /** Instant, network-free estimate (offline distance table). Used to paint the estimate card immediately. */
+  async offlineQuote(req: QuoteRequest): Promise<Quote> {
+    this.checkRegion(req);
+    const { estimateRoute } = await import('./estimate');
+    const route = req.service === 'hourly_rental'
+      ? { km: (req.hours ?? 8) * FARES.kmPerHour, durationText: `${req.hours} hrs`, toll: null, source: 'package' as const }
+      : estimateRoute(req.service === 'multi_city' ? [req.pickup, ...req.stops, req.drop as Place] : [req.pickup, req.drop as Place]);
+    return buildQuote(req, route, FARES);
+  }
+
+  /** Authoritative quote from the server (Google route + toll, signed token). Falls back to the offline estimate. */
   async quote(req: QuoteRequest): Promise<{ quote: Quote; token?: string; offline: boolean }> {
     this.checkRegion(req);
     const r = await this.call<{ quote: Quote; token: string }>('/quote', { method: 'POST', body: JSON.stringify(req) });
@@ -69,12 +80,11 @@ export class BookingApi {
       if (!r.ok) throw new BookingError(r.data.error || 'Could not calculate the fare.');
       return { quote: r.data.quote, token: r.data.token, offline: false };
     }
-    const { estimateRoute } = await import('./estimate');
-    const route = req.service === 'hourly_rental'
-      ? { km: (req.hours ?? 8) * FARES.kmPerHour, durationText: `${req.hours} hrs`, toll: null, source: 'package' as const }
-      : estimateRoute(req.service === 'multi_city' ? [req.pickup, ...req.stops, req.drop as Place] : [req.pickup, req.drop as Place]);
-    return { quote: buildQuote(req, route, FARES), offline: true };
+    return { quote: await this.offlineQuote(req), offline: true };
   }
+
+  /** Warm up lazy chunks/config so the first fare check feels instant. */
+  prefetch(): void { void import('./estimate'); void this.placesEnabled(); }
 
   async confirm(quote: Quote, token: string | undefined, vehicle: VehicleId): Promise<{ booking: Booking; summary: TripSummary; offline: boolean }> {
     if (token) {

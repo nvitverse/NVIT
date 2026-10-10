@@ -1,50 +1,71 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SITE } from './site.config';
-import { HUBS } from './data';
+import { HUBS, ROUTE_MAP } from './data';
 import { WaChooseComponent } from './components/wa-choose.component';
 import { generalMessage } from './core/whatsapp';
+import { Analytics } from './core/analytics.service';
+
+const FOOT_ROUTES = ['chennai-to-bangalore', 'chennai-to-pondicherry', 'chennai-to-coimbatore', 'chennai-to-tiruvannamalai', 'bangalore-to-chennai', 'coimbatore-to-ooty', 'madurai-to-kanyakumari', 'trichy-to-chennai', 'salem-to-bangalore', 'chennai-to-madurai', 'kochi-to-trivandrum'];
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, WaChooseComponent],
   template: `
     <a class="skip" href="#main">Skip to content</a>
+    <div class="topbar"><div class="wrap topbar-in">
+      <span>🚖 One way drop taxi across South India · 24/7 booking</span>
+      <span class="topbar-links"><a [href]="'tel:' + site.phoneIntl">📞 {{ site.phone }}</a><a [href]="'https://wa.me/' + site.whatsapp">WhatsApp</a></span>
+    </div></div>
     <header class="hdr">
       <div class="wrap hdr-in">
-        <a routerLink="/" class="logo" [attr.aria-label]="site.brand + ' home'"><span class="logo-mark">DT</span><span>Drop Taxi <b>Now</b></span></a>
+        <a routerLink="/" class="logo"><img class="logo-img" src="/favicon.svg" width="38" height="38" alt="" aria-hidden="true"><span class="logo-text">Drop Taxi <b>Now</b></span></a>
         <nav class="nav" aria-label="Main">
+          <a routerLink="/" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }">Home</a>
           <a routerLink="/one-way-taxi" routerLinkActive="on">One Way Taxi</a>
           <a routerLink="/drop-taxi" routerLinkActive="on">Routes</a>
           <a routerLink="/outstation-taxi" routerLinkActive="on">Outstation</a>
           <a routerLink="/airport-taxi" routerLinkActive="on">Airport</a>
           <a routerLink="/tariff" routerLinkActive="on">Tariff</a>
-          <a routerLink="/attach-taxi" routerLinkActive="on">Attach Taxi</a>
           <a routerLink="/contact" routerLinkActive="on">Contact</a>
         </nav>
-        <a class="btn btn-sm hide-sm" [href]="'tel:' + site.phoneIntl">Call {{ site.phone }}</a>
+        <a class="btn btn-sm hide-sm" routerLink="/" fragment="book">Book a Taxi</a>
       </div>
     </header>
     <main id="main"><router-outlet /></main>
+
     <footer class="ftr">
       <div class="wrap ftr-grid">
-        <div>
-          <p class="logo light"><span class="logo-mark">DT</span><span>Drop Taxi <b>Now</b></span></p>
-          <p>{{ site.tagline }}.</p>
-          <p class="ftr-contact"><a [href]="'tel:' + site.phoneIntl">Call {{ site.phone }}</a> <a [href]="'https://wa.me/' + site.whatsapp">WhatsApp us</a></p>
+        <div class="ftr-brand">
+          <a routerLink="/" class="logo light"><img class="logo-img" src="/favicon.svg" width="38" height="38" alt="" aria-hidden="true"><span class="logo-text">Drop Taxi <b>Now</b></span></a>
+          <p>{{ site.tagline }}. Fare shown before you book, with the km limit and extra-km rate.</p>
+          <ul class="ftr-contact">
+            <li><span aria-hidden="true">📞</span><a [href]="'tel:' + site.phoneIntl">{{ site.phone }}</a> <small>24/7</small></li>
+            <li><span aria-hidden="true">💬</span><a [href]="'https://wa.me/' + site.whatsapp">WhatsApp / WhatsApp Business</a></li>
+            @if (site.email) { <li><span aria-hidden="true">✉️</span><a [href]="'mailto:' + site.email">{{ site.email }}</a></li> }
+            @if (site.address) { <li><span aria-hidden="true">📍</span>{{ site.address.street ? site.address.street + ', ' : '' }}{{ site.address.locality }}, {{ site.address.region }}</li> }
+            <li><span aria-hidden="true">🗺️</span>Tamil Nadu · Kerala · Karnataka · Andhra Pradesh · Telangana · Puducherry</li>
+          </ul>
         </div>
-        <div><h3>Services</h3>
-          <a routerLink="/services/one-way-taxi">One way taxi</a><a routerLink="/services/drop-taxi">Drop taxi</a>
-          <a routerLink="/services/outstation-taxi">Outstation</a><a routerLink="/services/round-trip-taxi">Round trip</a>
-          <a routerLink="/services/airport-transfer">Airport transfer</a><a routerLink="/services/local-rental">Local rental</a></div>
-        <div><h3>Cities</h3>
-          @for (c of hubs; track c.slug) { <a [routerLink]="['/one-way-taxi', c.slug]">{{ c.name }} one way taxi</a> }</div>
-        <div><h3>Company</h3>
-          <a routerLink="/about">About</a><a routerLink="/tariff">Tariff</a><a routerLink="/attach-taxi">Attach your taxi</a><a routerLink="/faq">FAQ</a><a routerLink="/contact">Contact</a>
-          <a routerLink="/terms">Terms</a><a routerLink="/privacy-policy">Privacy</a><a routerLink="/cancellation-policy">Cancellation</a><a routerLink="/sitemap">Sitemap</a></div>
+        <nav aria-label="Quick links"><h3>Quick Links</h3>
+          <a routerLink="/">Home</a><a routerLink="/" fragment="book">Book a Taxi</a><a routerLink="/tariff">Tariff &amp; Rates</a><a routerLink="/drop-taxi">All Routes</a>
+          <a routerLink="/reviews">Customer Reviews</a><a routerLink="/track-booking">Track Booking</a><a routerLink="/about">About Us</a><a routerLink="/faq">FAQs</a><a routerLink="/contact">Contact Us</a></nav>
+        <nav aria-label="Services"><h3>Our Services</h3>
+          <a routerLink="/services/one-way-taxi">One Way Drop Taxi</a><a routerLink="/services/round-trip-taxi">Round Trip</a><a routerLink="/services/outstation-taxi">Outstation &amp; Multi City</a>
+          <a routerLink="/services/airport-transfer">Airport Transfers (24/7)</a><a routerLink="/services/local-rental">Hourly City Rentals</a><a routerLink="/attach-taxi">Attach Your Taxi / Driver Partner</a></nav>
+        <nav aria-label="Popular routes"><h3>Popular Routes</h3>
+          @for (r of routes; track r.slug) { <a [routerLink]="['/drop-taxi', r.slug]">{{ r.from.name }} → {{ r.to.name }}</a> }
+          <a class="more" routerLink="/drop-taxi">View all {{ routeCount }} routes →</a></nav>
       </div>
-      <div class="wrap ftr-bot">© {{ year }} {{ site.brand }} · Toll, permit & parking extra at actuals.</div>
+      <div class="wrap ftr-cities"><h3>One way taxi by city</h3>
+        <p>@for (c of hubs; track c.slug) { <a [routerLink]="['/one-way-taxi', c.slug]">{{ c.name }}</a> }<a class="more" routerLink="/one-way-taxi">All cities →</a></p></div>
+      <div class="wrap ftr-policies" aria-label="Policies">
+        <a routerLink="/privacy-policy">Privacy Policy</a><a routerLink="/terms">Terms &amp; Conditions</a><a routerLink="/cancellation-policy">Cancellation</a><a routerLink="/refund-policy">Refund Policy</a>
+        <a routerLink="/payment-policy">Payment Policy</a><a routerLink="/toll-permit">Toll &amp; State Permit</a><a routerLink="/luggage-policy">Luggage Policy</a><a routerLink="/pet-travel-policy">Pet Travel Policy</a><a routerLink="/sitemap">Sitemap</a>
+      </div>
+      <div class="wrap ftr-bot"><span>© {{ year }} {{ site.brand }}. All rights reserved.</span><span>Designed &amp; Developed by <b>{{ site.developer.name }}</b></span></div>
     </footer>
+
     <div class="sticky">
       <a class="btn" [href]="'tel:' + site.phoneIntl">Call now</a>
       <button type="button" class="btn btn-wa" (click)="waOpen.set(!waOpen())" [attr.aria-expanded]="waOpen()" aria-controls="wa-panel">WhatsApp</button>
@@ -61,9 +82,13 @@ import { generalMessage } from './core/whatsapp';
     }
   `
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  private analytics = inject(Analytics);
+  ngOnInit(): void { this.analytics.start(); }
   site = SITE;
   hubs = HUBS;
+  routes = FOOT_ROUTES.map((s) => ROUTE_MAP.get(s)).filter((r) => !!r) as NonNullable<ReturnType<typeof ROUTE_MAP.get>>[];
+  routeCount = ROUTE_MAP.size;
   year = new Date().getFullYear();
   waOpen = signal(false);
   msg = generalMessage();

@@ -10,6 +10,7 @@ export const SITE = {
   email: '',
   /** Optional postal address for schema. Leave empty until the real business address is confirmed. */
   address: null as null | { street?: string; locality: string; region: string; postalCode?: string },
+  developer: { name: 'Naveen Rajendran' },
   tagline: 'One way drop taxi across South India',
   fare: { minOneWayKm: 130, roundMinKmPerDay: 250, avgSpeedKmph: 55 }
 };

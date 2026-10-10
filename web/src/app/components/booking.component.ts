@@ -1,7 +1,6 @@
-import { Component, Input, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, PLATFORM_ID, effect, inject, signal, untracked } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AIRPORT_CITIES, CITY_MAP, inr } from '../data';
 import { BookingApi, BookingError } from '../core/booking-api.service';
 import { Attribution, Quote, QuoteRequest } from '../core/booking.model';
@@ -9,12 +8,17 @@ import { FARES } from '../core/fares';
 import { ServiceType, VehicleId } from '../core/fare';
 import { Place } from '../core/geo';
 import { placeOfCity } from '../core/local-places';
-import { VEHICLES } from '../core/vehicles-meta';
+import { VEHICLES, VEHICLE_META } from '../core/vehicles-meta';
 import { summarise } from '../core/summary';
-import { fareLines, kmPolicyText } from '../core/summary';
+import { messageToBusiness } from '../core/whatsapp';
+import { WaChooseComponent } from './wa-choose.component';
+import { SITE } from '../site.config';
 import { VEHICLE_IDS } from '../core/quote';
+import { Router } from '@angular/router';
+import { BookingPrefill } from '../core/booking-prefill.service';
+import { Analytics } from '../core/analytics.service';
 import { PlaceInputComponent } from './place-input.component';
-import { VehicleIconComponent } from './vehicle-icon.component';
+import { VehicleImgComponent } from './vehicle-img.component';
 
 const COUNTRIES = [['+91', 'IN +91'], ['+971', 'UAE +971'], ['+966', 'KSA +966'], ['+974', 'QA +974'], ['+965', 'KW +965'], ['+968', 'OM +968'], ['+973', 'BH +973'], ['+65', 'SG +65'], ['+60', 'MY +60'], ['+94', 'LK +94'], ['+1', 'US +1'], ['+44', 'UK +44'], ['+61', 'AU +61']];
 const TABS: { id: ServiceType; label: string; icon: string }[] = [
@@ -25,9 +29,10 @@ const TIMES = Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2)
 
 @Component({
   selector: 'app-booking',
-  imports: [FormsModule, PlaceInputComponent, VehicleIconComponent],
+  imports: [FormsModule, PlaceInputComponent, VehicleImgComponent, WaChooseComponent],
   template: `
   <section class="card book" aria-label="Book a taxi">
+    @if (step() === 1) {
     <div class="tabs" role="tablist" aria-label="Service type">
       @for (t of tabs; track t.id) { <button type="button" role="tab" [attr.aria-selected]="service === t.id" [class.on]="service === t.id" (click)="setService(t.id)"><span aria-hidden="true">{{ t.icon }}</span> {{ t.label }}</button> }
     </div>
@@ -100,40 +105,98 @@ const TIMES = Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2)
       <button class="btn btn-lg btn-block" type="submit" [disabled]="busy()">{{ busy() ? 'Calculating…' : 'Check Fare Now' }}</button>
       <p class="muted small center">No payment now · Final fare confirmed before pickup</p>
     </form>
+    }
 
-    @if (quote(); as q) {
-      <div class="result" id="fare-result" aria-live="polite">
-        <div class="r-head">
-          <div class="r-title"><b>{{ short(q.request.pickup.text) }}</b>@if (q.request.drop) { <span class="arrow"> → </span><b>{{ short(q.request.drop.text) }}</b> }
-            <div class="muted small">@if (q.request.service === 'hourly_rental') { {{ q.request.hours }} hrs · {{ q.request.hours! * kmPerHour }} km package } @else { ~{{ q.route.km }} km · ~{{ q.route.durationText }} }
-              @if (q.days > 1) { · {{ q.days }} days } @if (q.route.source !== 'package') { · {{ q.route.source === 'google' ? 'Google route distance' : 'Estimated distance' }} }@if (q.route.toll) { · est. toll {{ inr(q.route.toll) }} }</div></div>
-          <button type="button" class="link-btn" (click)="edit()">Edit trip</button>
+    @if (step() > 1) {
+      <ol class="stepper" aria-label="Booking progress">
+        <li class="done"><span>✓</span> Details</li>
+        <li [class.done]="step() > 2" [class.on]="step() === 2"><span>{{ step() > 2 ? '✓' : '2' }}</span> Estimate</li>
+        <li [class.on]="step() === 3"><span>3</span> Confirm</li>
+      </ol>
+    }
+
+    @if (step() === 2 && quote(); as q) {
+      @if (summary(); as s) {
+      <div class="est" id="fare-result" aria-live="polite">
+        <div class="est-top">
+          <div><span class="svc-pill">{{ s.serviceLabel }}</span><h3>Estimated Fare</h3></div>
+          <button type="button" class="edit-btn" (click)="edit()">✎ Edit</button>
         </div>
+        <p class="est-route"><b>{{ short(q.request.pickup.text) }}</b>@if (q.request.drop) { <span class="arrow"> → </span><b>{{ short(q.request.drop.text) }}</b> }</p>
+        <div class="est-price" [class.shimmer]="refining()"><span class="cur">₹</span><span class="amt">{{ totalNum(s.fare.total) }}</span>
+          <span class="per">{{ q.request.service === 'hourly_rental' ? s.fare.hours + ' hr package' : 'one trip, all cab charges' }}</span></div>
+        @if (refining()) { <p class="live"><span class="dot"></span>Checking the live route and toll…</p> }
+        @else if (live()) { <p class="live ok">✓ Live route applied · {{ q.route.source === 'google' ? 'Google Maps distance' : 'updated' }}</p> }
+        @else if (offline()) { <p class="live note">Preview mode: offline distance table (bookings and emails need the server).</p> }
         @if (q.coupon && !q.coupon.applied) { <p class="err small">{{ q.coupon.message }}</p> }
         @if (q.coupon?.applied) { <p class="ok small">Promo {{ q.coupon!.code }} applied ({{ q.coupon!.label }})</p> }
-        @if (offline()) { <p class="note small">Preview mode: fare uses the offline distance table. Booking emails are sent only when the server is running.</p> }
-        <div class="vlist" role="radiogroup" aria-label="Choose a cab">
+
+        <div class="vtabs" role="radiogroup" aria-label="Choose a cab">
           @for (v of vehicles; track v.id) {
-            <button type="button" role="radio" class="vopt" [class.on]="selected() === v.id" [attr.aria-checked]="selected() === v.id" (click)="selected.set(v.id)">
-              <app-vehicle-icon [type]="v.id" />
-              <span class="vinfo"><b>{{ v.name }}</b><span class="muted small">{{ v.models }} · {{ v.seatsLabel }} seats · {{ v.bags }} bags</span></span>
-              <span class="vprice"><b>{{ inr(q.fares[v.id].total) }}</b><span class="muted small">₹{{ q.fares[v.id].perKmRate }}/{{ q.request.service === 'hourly_rental' ? 'hr' : 'km' }}</span></span>
-            </button>
+            <button type="button" role="radio" class="vtab" [class.on]="selected() === v.id" [attr.aria-checked]="selected() === v.id" (click)="selected.set(v.id)">
+              <app-vehicle-img [type]="v.id" sizes="(max-width: 600px) 22vw, 90px" /><b>{{ v.name }}</b><span class="vt-price" [class.shimmer]="refining()">{{ inr(q.fares[v.id].total) }}</span></button>
           }
         </div>
-        @if (detail(); as d) {
-          <div class="breakdown">
-            <h4>Fare details · {{ d.vehicleName }}</h4>
-            <table>@for (l of d.lines; track l.label) { <tr><td>{{ l.label }}</td><td>{{ l.value }}</td></tr> }<tr class="tot"><td>Estimated fare</td><td>{{ d.total }}</td></tr></table>
-            <p class="small"><b>Km limit:</b> {{ d.kmPolicy }}</p>
-            <p class="small muted">{{ d.extras }}</p>
-          </div>
-        }
-        <button class="btn btn-wa btn-lg btn-block" type="button" (click)="book()" [disabled]="busy()">{{ busy() ? 'Booking…' : 'Book ' + selectedName() + ' · ' + inr(q.fares[selected()].total) }}</button>
-        <p class="muted small center">We confirm your driver &amp; cab details on WhatsApp before pickup.</p>
+
+        <dl class="rows">
+          <div><dt>Route</dt><dd>{{ s.pickup }}@for (x of s.stops; track $index) { <br>↳ {{ x }} }@if (s.drop) { <br>→ {{ s.drop }} }</dd></div>
+          <div><dt>Pickup</dt><dd>{{ s.dateText }} · {{ s.timeText }}</dd></div>
+          @if (s.returnText) { <div><dt>Return</dt><dd>{{ s.returnText }}</dd></div> }
+          <div><dt>Total distance</dt><dd>{{ s.distanceText }}@if (q.route.source !== 'package') { <span class="muted small"> · {{ q.route.source === 'google' ? 'Google route' : 'estimated' }}</span> }</dd></div>
+          <div><dt>Drive time</dt><dd>{{ s.durationText }}</dd></div>
+          <div><dt>Vehicle</dt><dd>{{ s.vehicleName }} <span class="muted small">({{ s.vehicleModels }}) · {{ vmeta().seatsLabel }} seats · {{ vmeta().bags }} bags · AC</span></dd></div>
+          <div><dt>Rate</dt><dd>₹{{ s.fare.perKmRate }}/{{ q.request.service === 'hourly_rental' ? 'hr' : 'km' }}</dd></div>
+          <div><dt>Billed distance</dt><dd>{{ q.request.service === 'hourly_rental' ? s.fare.includedKm + ' km included' : s.fare.billableKm + ' km (min. ' + s.fare.minimumKm + ' km)' }}</dd></div>
+          <div class="hl"><dt>Km limit</dt><dd>{{ s.kmPolicy }}</dd></div>
+          @if (s.fare.batta) { <div><dt>Driver allowance</dt><dd>{{ inr(s.fare.batta) }} <span class="tag ok">Included</span></dd></div> }
+          @if (s.fare.stopCharge) { <div><dt>Extra stops</dt><dd>{{ inr(s.fare.stopCharge) }} <span class="tag ok">Included</span></dd></div> }
+          <div><dt>Toll</dt><dd>@if (s.fare.toll) { {{ inr(s.fare.toll) }} <span class="tag ok">Included</span> } @else if (q.route.toll) { Est. {{ inr(q.route.toll) }} <span class="tag">Extra · pay at plazas</span> } @else { <span class="tag">Extra at actuals</span> }</dd></div>
+          <div><dt>State permit / border</dt><dd><span class="tag">Extra at actuals</span></dd></div>
+          <div><dt>Parking &amp; waiting</dt><dd><span class="tag">Extra at actuals</span></dd></div>
+          @if (s.fare.discount) { <div><dt>Discount</dt><dd class="okc">-{{ inr(s.fare.discount) }}</dd></div> }
+        </dl>
+
+        <details class="bd"><summary>Fare breakdown</summary>
+          <table>@for (l of s.lines; track l.label) { <tr><td>{{ l.label }}</td><td>{{ l.value }}</td></tr> }<tr class="tot"><td>Estimated fare</td><td>{{ s.totalText }}</td></tr></table>
+          <p class="small muted">{{ s.extrasNote }}</p>
+        </details>
+
+        <button class="btn btn-dark btn-lg btn-block" type="button" (click)="go(3)" [disabled]="refining()">{{ refining() ? 'Confirming route…' : 'Book Now →' }}</button>
+        <button type="button" class="link-btn center-btn" (click)="edit()">← Modify ride details</button>
+
+        <div class="share">
+          <span class="muted small">Share this quote:</span>
+          <app-wa-choose [to]="bizWa" [text]="quoteMsg()" label="Send" />
+          <button type="button" class="btn btn-ghost btn-sm" (click)="copyQuote()">{{ copied() ? 'Copied ✓' : 'Copy quote' }}</button>
+        </div>
+        <ul class="pills"><li>Pay only one way, zero return charges</li><li>24/7 doorstep pickup across South India</li><li>Fare confirmed before pickup</li></ul>
       </div>
+      }
     }
-  </section>`
+
+    @if (step() === 3 && quote(); as q) {
+      @if (summary(); as s) {
+      <div class="est confirm" id="fare-result">
+        <div class="est-top"><div><span class="svc-pill">{{ s.serviceLabel }}</span><h3>Confirm your booking</h3></div><button type="button" class="edit-btn" (click)="go(2)">← Back</button></div>
+        <div class="est-price"><span class="cur">₹</span><span class="amt">{{ totalNum(s.fare.total) }}</span><span class="per">{{ s.vehicleName }} · estimated fare</span></div>
+        <dl class="rows">
+          <div><dt>Passenger</dt><dd>{{ s.customer.name }}<br><span class="muted small">Mobile {{ s.customer.phoneDisplay }} · WhatsApp +{{ s.customer.waIntl }}@if (s.customer.email) { · {{ s.customer.email }} }</span></dd></div>
+          <div><dt>Route</dt><dd>{{ s.pickup }}@for (x of s.stops; track $index) { <br>↳ {{ x }} }@if (s.drop) { <br>→ {{ s.drop }} }</dd></div>
+          <div><dt>Pickup</dt><dd>{{ s.dateText }} · {{ s.timeText }}</dd></div>
+          @if (s.returnText) { <div><dt>Return</dt><dd>{{ s.returnText }}</dd></div> }
+          <div><dt>Distance</dt><dd>{{ s.distanceText }} · {{ s.durationText }}</dd></div>
+          <div><dt>Passengers</dt><dd>{{ s.passengers || 1 }}</dd></div>
+          <div class="hl"><dt>Km limit</dt><dd>{{ s.kmPolicy }}</dd></div>
+          <div><dt>Not included</dt><dd class="small">{{ s.extrasNote }}</dd></div>
+        </dl>
+        @if (error()) { <p class="err" role="alert">{{ error() }}</p> }
+        <button class="btn btn-wa btn-lg btn-block" type="button" (click)="book()" [disabled]="busy() || refining()">{{ busy() ? 'Booking…' : refining() ? 'Confirming route…' : 'Confirm booking · ' + s.totalText }}</button>
+        <p class="muted small center">By confirming you agree to our <a href="/terms" target="_blank">Terms</a> and <a href="/cancellation-policy" target="_blank">Cancellation policy</a>. We confirm your driver &amp; cab on WhatsApp before pickup.</p>
+      </div>
+      }
+    }
+  </section>
+`
 })
 export class BookingComponent implements OnInit {
   @Input() from = ''; @Input() to = ''; @Input() startService: ServiceType = 'one_way';
@@ -151,12 +214,32 @@ export class BookingComponent implements OnInit {
 
   today = signal(''); busy = signal(false); error = signal('');
   quote = signal<Quote | null>(null); private token: string | undefined;
+  step = signal<1 | 2 | 3>(1); refining = signal(false); live = signal(false); copied = signal(false);
   offline = signal(false); selected = signal<VehicleId>('SEDAN');
+  bizWa = SITE.whatsapp;
+  private seq = 0;
   private api = inject(BookingApi); private router = inject(Router);
+  private prefill = inject(BookingPrefill); private analytics = inject(Analytics);
+  constructor() {
+    effect(() => {
+      const r = this.prefill.request();
+      if (!r) return;
+      untracked(() => {
+        const f = CITY_MAP.get(r.from), t = CITY_MAP.get(r.to);
+        if (!f || !t) return;
+        this.seq++; this.refining.set(false); this.quote.set(null); this.token = undefined; this.error.set(''); this.submitted = false;
+        this.service = 'one_way'; this.pickup = placeOfCity(f); this.drop = placeOfCity(t); this.step.set(1);
+        if (r.vehicle) this.selected.set(r.vehicle);
+        this.scrollTop();
+        setTimeout(() => document.getElementById('nm')?.focus({ preventScroll: true }), 450);
+      });
+    });
+  }
   private browser = isPlatformBrowser(inject(PLATFORM_ID));
 
   ngOnInit(): void {
     this.service = this.startService;
+    if (this.browser) (window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 300)))(() => this.api.prefetch());
     const f = CITY_MAP.get(this.from), t = CITY_MAP.get(this.to);
     if (f) this.pickup = placeOfCity(f);
     if (t) this.drop = placeOfCity(t);
@@ -174,7 +257,9 @@ export class BookingComponent implements OnInit {
   useAirport(slug: string): void { const c = CITY_MAP.get(slug); if (!c) return; const p: Place = { ...placeOfCity(c), text: `${c.name} Airport, ${c.state}` }; if (!this.pickup) this.pickup = p; else this.drop = p; }
   days = () => { if (!this.date || !this.endDate) return 1; const d = Math.round((Date.parse(this.endDate) - Date.parse(this.date)) / 86400000) + 1; return d > 0 ? d : 1; };
   phoneOk = () => (this.cc === '+91' ? /^[6-9]\d{9}$/.test(this.phone.replace(/\D/g, '')) : /^\d{6,15}$/.test(this.phone.replace(/\D/g, '')));
-  edit(): void { this.quote.set(null); }
+  edit(): void { this.seq++; this.refining.set(false); this.step.set(1); this.error.set(''); this.quote.set(null); this.token = undefined; this.scrollTop(); }
+  go(n: 2 | 3): void { this.step.set(n); this.error.set(''); this.scrollTop(); }
+  private scrollTop(): void { if (this.browser) setTimeout(() => document.querySelector('app-booking .book')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30); }
 
   private attribution(): Attribution {
     let a: Attribution = {};
@@ -208,26 +293,36 @@ export class BookingComponent implements OnInit {
       attribution: this.attribution()
     };
     this.busy.set(true);
+    const my = ++this.seq;
     try {
-      const r = await this.api.quote(req);
-      this.quote.set(r.quote); this.token = r.token; this.offline.set(r.offline);
-      const best = this.passengers > 6 ? 'INNOVA' : this.passengers > 4 ? 'SUV' : 'SEDAN';
-      this.selected.set(best);
+      // 1) Instant estimate from the offline table, so the estimate card appears immediately.
+      const instant = await this.api.offlineQuote(req);
+      this.quote.set(instant); this.token = undefined; this.offline.set(false); this.live.set(false); this.refining.set(true);
+      this.selected.set(this.passengers > 6 ? 'INNOVA' : this.passengers > 4 ? 'SUV' : 'SEDAN');
+      this.step.set(2); this.busy.set(false); this.scrollTop();
       try { localStorage.setItem('dtn:contact', JSON.stringify({ name: this.name, phone: this.phone, email: this.email, cc: this.cc })); } catch { /* ignore */ }
-      this.push('fare_check', r.quote);
-      setTimeout(() => document.getElementById('fare-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-    } catch (e) { this.error.set(e instanceof BookingError ? e.message : 'Something went wrong. Please try again or call us.'); }
+      this.push('fare_check', instant);
+      // 2) Live route + toll + signed token from the server; numbers update in place.
+      const r = await this.api.quote(req);
+      if (my !== this.seq) return;
+      const changed = Math.abs(r.quote.route.km - instant.route.km) >= 1 || r.quote.route.toll != null;
+      this.quote.set(r.quote); this.token = r.token; this.offline.set(r.offline); this.live.set(!r.offline && changed); this.refining.set(false);
+    } catch (e) {
+      if (my !== this.seq) return;
+      this.refining.set(false); this.busy.set(false);
+      if (this.step() === 2 && this.quote()) { this.edit(); }
+      this.error.set(e instanceof BookingError ? e.message : 'Something went wrong. Please try again or call us.');
+      return;
+    }
     this.busy.set(false);
   }
 
-  /** First two parts of an address, for compact headings (full text is kept in messages/emails). */
+  vmeta = () => VEHICLE_META[this.selected()];
+  summary = () => { const q = this.quote(); return q ? summarise(q, this.selected()) : null; };
+  totalNum = (n: number) => Math.round(n).toLocaleString('en-IN');
   short = (t: string) => t.split(',').slice(0, 2).join(',').trim();
-  selectedName = () => VEHICLES.find((v) => v.id === this.selected())?.name ?? '';
-  detail = () => {
-    const q = this.quote(); if (!q) return null; const f = q.fares[this.selected()]; const s = summarise(q, this.selected());
-    return { vehicleName: s.vehicleName, lines: fareLines(f), total: s.totalText, kmPolicy: kmPolicyText(f), extras: s.extrasNote };
-  };
-
+  quoteMsg = () => { const s = this.summary(); return s ? messageToBusiness(s) : ''; };
+  copyQuote(): void { navigator.clipboard?.writeText(this.quoteMsg()).then(() => { this.copied.set(true); setTimeout(() => this.copied.set(false), 2000); }).catch(() => undefined); }
   async book(): Promise<void> {
     const q = this.quote(); if (!q) return;
     this.busy.set(true); this.error.set('');
@@ -235,12 +330,11 @@ export class BookingComponent implements OnInit {
       const r = await this.api.confirm(q, this.token, this.selected());
       this.push('booking_confirmed', q);
       try { sessionStorage.setItem('dtn:last', JSON.stringify({ summary: r.summary, bookingId: r.booking.bookingId, offline: r.offline, emailed: !!q.request.contact.email && !r.offline })); } catch { /* ignore */ }
+      try { sessionStorage.setItem('dtn:last', JSON.stringify({ summary: r.summary, bookingId: r.booking.bookingId, offline: r.offline, emailed: !!q.request.contact.email && !r.offline })); } catch { /* ignore */ }
       await this.router.navigate(['/thank-you'], { queryParams: { ref: r.booking.bookingId } });
     } catch (e) { this.error.set(e instanceof BookingError ? e.message : 'Could not confirm. Please try again or call us.'); }
     this.busy.set(false);
   }
-  private push(event: string, q: Quote): void {
-    (window as unknown as { dataLayer?: unknown[] }).dataLayer?.push({ event, service: q.request.service, value: q.fares[this.selected()].total, currency: 'INR' });
-  }
+  private push(event: string, q: Quote): void { this.analytics.track(event, { service: q.request.service, value: q.fares[this.selected()].total, currency: 'INR' }); }
   protected readonly ids = VEHICLE_IDS;
 }

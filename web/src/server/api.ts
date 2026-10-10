@@ -15,7 +15,7 @@ import { env } from './env';
 import { mailConfigured, sendMail } from './mail';
 import { details, reverse, suggest, checkRegion } from './places';
 import { syncBooking, syncEnquiry } from './admin-sync';
-import { appendJsonl } from './store';
+import { appendJsonl, readJson, readJsonl } from './store';
 import { signQuote, verifyQuote } from './token';
 
 const SERVICES: ServiceType[] = ['one_way', 'round_trip', 'hourly_rental', 'multi_city', 'airport'];
@@ -110,7 +110,15 @@ export function apiRouter(): Router {
   r.use(json({ limit: '20kb' }));
 
   r.get('/health', (_q, res) => { res.json({ ok: true, mail: mailConfigured(), maps: !!env.mapsKey, adminSync: !!(env.adminSync.enquiryUrl || env.adminSync.confirmUrl) }); });
-  r.get('/config', (_q, res) => { res.setHeader('Cache-Control', 'public, max-age=300'); res.json({ places: !!env.mapsKey, brand: SITE.brand }); });
+  r.post('/mail-test', async (req, res) => {
+    const t = env.mailTestToken;
+    if (!t || req.header('x-test-token') !== t) { res.status(404).json({ error: 'Not found' }); return; }
+    if (limited(req, 'mailtest', 3)) { res.status(429).json({ error: 'Too many requests' }); return; }
+    const result = await sendMail(env.adminEmails, { subject: `[${SITE.brand}] SMTP test – ignore`, text: `SMTP test from ${SITE.domain} at ${new Date().toISOString()}`,
+      html: `<p>SMTP test from <b>${SITE.domain}</b> at ${new Date().toISOString()}. If you can read this, email sending works.</p>` }, { tag: 'smtp-test' });
+    res.status(result.sent ? 200 : 502).json({ sent: result.sent, error: result.error, to: env.adminEmails.length });
+  });
+  r.get('/config', (_q, res) => { res.setHeader('Cache-Control', 'public, max-age=300'); res.json({ places: !!env.mapsKey, brand: SITE.brand, ...env.analytics }); });
 
   r.get('/places/suggest', async (req, res) => {
     if (limited(req, 'places', 60)) { res.status(429).json({ error: 'Too many requests' }); return; }
@@ -184,6 +192,38 @@ export function apiRouter(): Router {
     appendJsonl('attach-requests.jsonl', { ref, at: new Date().toISOString(), ...v });
     bg(sendMail(env.adminEmails, vendorLeadEmail({ ...v, ref }), { tag: 'admin-attach' }), 'mail');
     res.json({ ok: true, ref });
+  });
+
+  /** Customer reviews: submissions are stored as pending and emailed; only entries in DATA_DIR/reviews-approved.json are shown. */
+  r.get('/reviews', (_q, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=120');
+    const list = readJson<{ name: string; rating: number; text: string; route?: string; date?: string }[]>('reviews-approved.json', []);
+    res.json({ items: list.slice(-50).reverse() });
+  });
+  r.post('/review', async (req, res) => {
+    if (limited(req, 'review', 4)) { res.status(429).json({ error: 'Too many requests.' }); return; }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const v = { name: str(b['name'], 60), rating: Math.round(Number(b['rating'])), text: str(b['text'], 600), route: str(b['route'], 80) };
+    if (v.name.length < 2 || !(v.rating >= 1 && v.rating <= 5) || v.text.length < 10) { res.status(400).json({ error: 'Please enter your name, a rating and a review of at least 10 characters.' }); return; }
+    const ref = 'DTN-R-' + randomBytes(3).toString('hex').toUpperCase();
+    appendJsonl('reviews-pending.jsonl', { ref, at: new Date().toISOString(), ...v });
+    bg(sendMail(env.adminEmails, { subject: `[${SITE.brand}] New review pending ${ref} (${v.rating}★)`, text: `${v.name} (${v.rating}/5) ${v.route}\n${v.text}\n\nTo publish, add it to DATA_DIR/reviews-approved.json`,
+      html: `<p><b>${v.name.replace(/[<>&]/g, '')}</b> rated <b>${v.rating}/5</b> ${v.route.replace(/[<>&]/g, '')}</p><p>${v.text.replace(/[<>&]/g, '')}</p><p>Ref ${ref}. To publish, add it to <code>reviews-approved.json</code>.</p>` }, { tag: 'admin-review' }), 'mail');
+    res.json({ ok: true, ref });
+  });
+
+  /** Booking lookup: needs the booking ID and the last 4 digits of the mobile number used for the booking. */
+  r.post('/track', (req, res) => {
+    if (limited(req, 'track', 10)) { res.status(429).json({ error: 'Too many requests.' }); return; }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const id = str(b['id'], 40).toUpperCase(), last4 = str(b['last4'], 4).replace(/\D/g, '');
+    if (!/^DTN-B-\d{6}-[A-Z0-9]{4}$/.test(id) || last4.length !== 4) { res.status(400).json({ error: 'Enter your booking ID (like DTN-B-261010-AB12) and the last 4 digits of your mobile number.' }); return; }
+    const hit = readJsonl<Booking>('bookings.jsonl').reverse().find((x) => x.bookingId === id);
+    if (!hit || !hit.quote.request.contact.phone.endsWith(last4)) { res.status(404).json({ error: 'We could not find a booking with those details.' }); return; }
+    const status = readJson<Record<string, string>>('booking-status.json', {})[id];
+    const s = summarise(hit.quote, hit.vehicle, { booking: hit });
+    res.json({ bookingId: id, status: status || 'Received – our team will confirm your driver and cab details on WhatsApp.', confirmedAt: hit.confirmedAt,
+      serviceLabel: s.serviceLabel, pickup: s.pickup, drop: s.drop, stops: s.stops, dateText: s.dateText, timeText: s.timeText, returnText: s.returnText, vehicle: `${s.vehicleName} (${s.vehicleModels})`, total: s.totalText, kmPolicy: s.kmPolicy });
   });
 
   r.use((_q, res) => { res.status(404).json({ error: 'Not found' }); });

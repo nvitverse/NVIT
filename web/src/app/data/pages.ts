@@ -38,6 +38,39 @@ export const PAGES: StaticPage[] = [
   { key: 'cancellation', path: '/cancellation-policy', title: `Cancellation Policy | ${SITE.brand}`, h1: 'Cancellation policy', desc: `Cancellation terms for ${SITE.brand} bookings.`,
     sections: [{ h: 'Cancellation', p: 'Please inform us as early as possible if your plan changes. Cancellation charges, if any, are confirmed at booking.' }, { h: 'Draft notice', p: 'DRAFT: set exact cancellation windows and charges before launch.' }] }
 ];
+
+const DRAFT = { h: 'Review notice', p: 'DRAFT: these terms are sensible defaults. The business owner should review and confirm them before launch.' };
+PAGES.push(
+  { key: 'toll', path: '/toll-permit', title: `Toll & State Permit Charges | ${SITE.brand}`, h1: 'Toll & state permit charges', desc: 'How toll, state permit/border charges, parking and hill-station fees work on one way and outstation taxi trips.',
+    sections: [
+      { h: 'Toll', p: 'Highway toll is not part of the per-km fare. It is paid at toll plazas and charged at actuals. When Google route data is available, the fare page shows an estimated toll for your route; choose "Includes toll" to add it to the fare estimate.' },
+      { h: 'State permit / border charges', p: 'Trips that cross a state border (for example Tamil Nadu to Kerala, Karnataka or Andhra Pradesh) attract state permit or border entry charges. These are charged at actuals as per the rules of the states concerned.' },
+      { h: 'Parking, hill-station and other fees', p: 'Parking, hill-station entry (such as Ooty or Kodaikanal), temple vehicle entry and similar fees are paid by the customer at actuals.' },
+      { h: 'Driver allowance (batta)', p: 'Driver allowance is already included in the quoted fare. It is shown as a separate line in the fare breakdown.' },
+      DRAFT ] },
+  { key: 'luggage', path: '/luggage-policy', title: `Luggage Policy | ${SITE.brand}`, h1: 'Luggage policy', desc: 'Luggage allowance for sedan, SUV and Innova taxis, and how to arrange extra luggage.',
+    sections: [
+      { h: 'Allowance', p: 'Each cab carries a limited amount of luggage: Sedan 3 bags, SUV 5 bags, Innova 6 bags, Innova Crysta 6 bags (standard suitcases, with passengers seated). Please check the cab details on the fare page.' },
+      { h: 'Extra luggage', p: 'If you have more luggage than the allowance, choose a larger cab or tell us when booking so we can arrange a suitable vehicle. Roof carriers are not provided.' },
+      { h: 'Prohibited items', p: 'Illegal goods, hazardous or flammable materials and items that can damage the vehicle are not allowed.' },
+      DRAFT ] },
+  { key: 'pet', path: '/pet-travel-policy', title: `Pet Travel Policy | ${SITE.brand}`, h1: 'Pet travel policy', desc: 'Travelling with pets: please inform us at booking so we can confirm a suitable cab.',
+    sections: [
+      { h: 'Informing us', p: 'Well-behaved pets can travel in our taxis if the driver is informed at the time of booking. Please mention your pet when you book on WhatsApp or call.' },
+      { h: 'Your responsibility', p: 'Pets should be leashed or in a carrier, and the owner is responsible for cleanliness and any damage. A cleaning charge may apply if the cab needs special cleaning.' },
+      DRAFT ] },
+  { key: 'refund', path: '/refund-policy', title: `Refund Policy | ${SITE.brand}`, h1: 'Refund policy', desc: `Refund terms for ${SITE.brand} bookings.`,
+    sections: [
+      { h: 'Advance payments', p: 'The website does not collect payment online. If you paid an advance to our team, it will be refunded as per the cancellation terms confirmed at booking.' },
+      { h: 'How refunds are made', p: 'Eligible refunds are returned to the same method used for the payment within 5–7 working days.' },
+      DRAFT ] },
+  { key: 'payment', path: '/payment-policy', title: `Payment Policy | ${SITE.brand}`, h1: 'Payment policy', desc: `How fares are paid on ${SITE.brand} trips.`,
+    sections: [
+      { h: 'Fare', p: 'The fare shown on the website is an estimate based on distance and the selected cab. The final fare is confirmed by our team and is based on the actual kilometres travelled, plus toll, state permit, parking and other extras at actuals.' },
+      { h: 'Payment', p: 'Online payment is not collected on the website at the moment. Payment terms are confirmed by our team on call or WhatsApp when your booking is confirmed.' },
+      DRAFT ] }
+);
+
 export const GENERAL_FAQ = [
   { q: 'What is a one way drop taxi?', a: 'A one way drop taxi takes you from one city to another and you pay only for the one-way distance, not the return.' },
   { q: 'How is the fare calculated?', a: 'One way: the higher of actual km or 130 km, multiplied by the per-km rate, plus driver allowance. Round trip: the higher of 250 km per day or twice the one-way distance, plus driver allowance per day.' },

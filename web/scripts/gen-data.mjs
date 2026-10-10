@@ -61,7 +61,7 @@ writeFileSync(join(dataDir, 'distances.json'), JSON.stringify(distances));
 writeFileSync(join(dataDir, 'routes.json'), JSON.stringify(routes));
 
 const staticPaths = ['/', '/one-way-taxi', '/drop-taxi', '/outstation-taxi', '/airport-taxi', '/services', '/tariff', '/about',
-  '/contact', '/faq', '/attach-taxi', '/terms', '/privacy-policy', '/cancellation-policy', '/sitemap'];
+  '/contact', '/faq', '/attach-taxi', '/terms', '/privacy-policy', '/cancellation-policy', '/refund-policy', '/payment-policy', '/toll-permit', '/luggage-policy', '/pet-travel-policy', '/reviews', '/sitemap'];
 const services = ['one-way-taxi', 'drop-taxi', 'outstation-taxi', 'round-trip-taxi', 'airport-transfer', 'local-rental'];
 const paths = [
   ...staticPaths,
@@ -72,7 +72,7 @@ const paths = [
   ...routes.map((r) => `/drop-taxi/${r.from}-to-${r.to}`)
 ];
 
-writeFileSync(join(root, 'routes.txt'), [...paths, '/404', '/thank-you', '/whatsapp'].join('\n') + '\n'); // /404 is prerendered for the server's real-404 response
+writeFileSync(join(root, 'routes.txt'), [...paths, '/404', '/thank-you', '/whatsapp', '/track-booking'].join('\n') + '\n'); // /404 is prerendered for the server's real-404 response
 const today = new Date().toISOString().slice(0, 10);
 const prio = (p) => (p === '/' ? '1.0' : p.startsWith('/drop-taxi/') ? '0.6' : p.split('/').length === 2 ? '0.8' : '0.7');
 const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +

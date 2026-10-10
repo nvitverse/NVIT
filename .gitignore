@@ -1,3 +1,6 @@
 
 # runtime leads
 web/data/
+
+# generated upload bundle (build with: node web/scripts/make-hostinger-bundle.mjs)
+hostinger-bundle/

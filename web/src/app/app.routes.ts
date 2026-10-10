@@ -22,6 +22,13 @@ export const routes: Routes = [
   { path: 'attach-taxi', loadComponent: () => import('./pages/attach.page').then((m) => m.AttachPage) },
   { path: 'thank-you', loadComponent: () => import('./pages/thankyou.page').then((m) => m.ThankYouPage) },
   { path: 'whatsapp', loadComponent: () => import('./pages/whatsapp.page').then((m) => m.WhatsappPage) },
+  { path: 'toll-permit', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'toll' } },
+  { path: 'luggage-policy', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'luggage' } },
+  { path: 'pet-travel-policy', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'pet' } },
+  { path: 'refund-policy', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'refund' } },
+  { path: 'payment-policy', loadComponent: () => import('./pages/static.page').then((m) => m.StaticPageComponent), data: { key: 'payment' } },
+  { path: 'reviews', loadComponent: () => import('./pages/reviews.page').then((m) => m.ReviewsPage) },
+  { path: 'track-booking', loadComponent: () => import('./pages/track.page').then((m) => m.TrackPage) },
   { path: 'sitemap', loadComponent: () => import('./pages/sitemap.page').then((m) => m.SitemapPage) },
   { path: '**', loadComponent: () => import('./pages/notfound.page').then((m) => m.NotFoundPage) }
 ];

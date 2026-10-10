@@ -7,7 +7,7 @@ import { inr } from '../app/core/format';
 import { SITE } from '../app/site.config';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-const BRAND = '#0b3d3a', AMBER = '#f5a524', INK = '#14201e', MUTED = '#5b6a67', LINE = '#e6e1d6', BG = '#faf7f2', WA = '#1faa59', WAB = '#0e8f5a';
+const BRAND = '#111111', AMBER = '#f5b800', INK = '#111111', MUTED = '#5b6574', LINE = '#e2e8f0', BG = '#f8fafc', WA = '#17803d', WAB = '#0b7a4b';
 
 const btn = (href: string, label: string, bg: string, fg = '#ffffff') =>
   `<a href="${esc(href)}" style="display:inline-block;background:${bg};color:${fg};text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border-radius:999px;margin:4px 6px 4px 0;font-family:Arial,Helvetica,sans-serif">${esc(label)}</a>`;
@@ -22,9 +22,9 @@ function shell(preheader: string, badge: string, title: string, intro: string, i
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG}"><tr><td align="center" style="padding:20px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px">
-<tr><td style="background:${BRAND};border-radius:14px 14px 0 0;padding:18px 22px">
+<tr><td style="background:${BRAND};border-bottom:4px solid ${AMBER};border-radius:14px 14px 0 0;padding:18px 22px">
  <table role="presentation" width="100%"><tr><td style="color:#fff;font-size:20px;font-weight:700">Drop Taxi <span style="color:${AMBER}">Now</span></td>
- <td align="right" style="color:#cfe3e0;font-size:12px">${esc(badge)}</td></tr></table></td></tr>
+ <td align="right" style="color:#d6d6d6;font-size:12px">${esc(badge)}</td></tr></table></td></tr>
 <tr><td style="background:${BG};padding:22px 4px 6px"><h1 style="margin:0 0 6px;font-size:22px;line-height:1.25;color:${INK}">${esc(title)}</h1><p style="margin:0 0 16px;color:${MUTED};font-size:15px;line-height:1.5">${intro}</p>${inner}</td></tr>
 <tr><td style="padding:14px 4px 26px;color:${MUTED};font-size:12px;line-height:1.6;border-top:1px solid ${LINE}">
  <b>${esc(SITE.brand)}</b> · <a href="${SITE.url}" style="color:${MUTED}">${SITE.domain}</a> · ${SITE.phone}<br>
@@ -76,7 +76,7 @@ export function customerBookingEmail(s: TripSummary): Mail {
 export function adminLeadEmail(s: TripSummary, q: Quote, meta: { kind: 'enquiry' | 'booking'; ip?: string }): Mail {
   const toCust = messageToCustomer(s);
   const c = s.customer;
-  const contact = card('Customer', `<table width="100%" cellpadding="0" cellspacing="0">${row('Name', esc(c.name), true)}${row('Mobile', `<a href="tel:+${c.phoneIntl}" style="color:${BRAND}">${esc(c.phoneDisplay)}</a>`)}${row('WhatsApp', '+' + esc(c.waIntl))}${row('Email', c.email ? esc(c.email) : '<span style="color:' + MUTED + '">not provided</span>')}</table>` +
+  const contact = card('Customer', `<table width="100%" cellpadding="0" cellspacing="0">${row('Name', esc(c.name), true)}${row('Mobile', `<a href="tel:+${c.phoneIntl}" style="color:${INK}">${esc(c.phoneDisplay)}</a>`)}${row('WhatsApp', '+' + esc(c.waIntl))}${row('Email', c.email ? esc(c.email) : '<span style="color:' + MUTED + '">not provided</span>')}</table>` +
     `<div style="margin-top:8px">${btn('tel:+' + c.phoneIntl, 'Call customer', BRAND)}${waButtons(c.waIntl || c.phoneIntl, toCust, 'Message customer')}</div>`);
   const fares = VEHICLE_IDS.map((v) => {
     const f = q.fares[v], sel = v === s.vehicleId;

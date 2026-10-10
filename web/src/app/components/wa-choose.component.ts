@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { waBusinessAndroid, waBusinessIos, waLink } from '../core/whatsapp';
+import { Analytics } from '../core/analytics.service';
 
 /** Two buttons: WhatsApp and WhatsApp Business. On Android/iOS the Business button targets the Business app directly. */
 @Component({
@@ -14,6 +15,7 @@ import { waBusinessAndroid, waBusinessIos, waLink } from '../core/whatsapp';
 export class WaChooseComponent implements OnInit {
   @Input() to = ''; @Input() text = ''; @Input() label = 'Chat'; @Input() stack = false;
   private browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private analytics = inject(Analytics);
   private os = signal<'android' | 'ios' | 'other'>('other');
   ngOnInit(): void {
     if (!this.browser) return;
@@ -24,6 +26,6 @@ export class WaChooseComponent implements OnInit {
   biz = () => this.os() === 'android' ? waBusinessAndroid(this.to, this.text) : this.os() === 'ios' ? waBusinessIos(this.to, this.text) : waLink(this.to, this.text);
   track(kind: string): void {
     if (!this.browser) return;
-    (window as unknown as { dataLayer?: unknown[] }).dataLayer?.push({ event: 'whatsapp_click', channel: kind });
+    this.analytics.track('whatsapp_click', { channel: kind });
   }
 }

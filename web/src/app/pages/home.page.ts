@@ -4,6 +4,7 @@ import { SeoService } from '../core/seo.service';
 import { BookingComponent } from '../components/booking.component';
 import { FleetComponent } from '../components/fleet.component';
 import { FaqComponent } from '../components/faq.component';
+import { RouteExplorerComponent } from '../components/route-explorer.component';
 import { CITIES, ROUTE_MAP, inr, fareFor } from '../data';
 import { GENERAL_FAQ } from '../data/pages';
 import { SITE } from '../site.config';
@@ -12,7 +13,7 @@ const POPULAR = ['chennai-to-bangalore', 'bangalore-to-chennai', 'chennai-to-mad
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, BookingComponent, FleetComponent, FaqComponent],
+  imports: [RouterLink, BookingComponent, FleetComponent, FaqComponent, RouteExplorerComponent],
   template: `
   <section class="hero"><div class="wrap hero-grid">
     <div>
@@ -20,7 +21,7 @@ const POPULAR = ['chennai-to-bangalore', 'bangalore-to-chennai', 'chennai-to-mad
       <h1>One way drop taxi across South India</h1>
       <p class="lead">Pay only for the distance you travel. See the fare first, then confirm on call or WhatsApp.</p>
       <ul class="ticks"><li>No return fare on one-way trips</li><li>Fare shown before you book</li><li>Km limit and extra-km rate shown upfront</li><li>24/7 booking support on call and WhatsApp</li></ul>
-      <p class="hero-cta"><a class="btn btn-lg" [href]="'tel:' + site.phoneIntl">Call {{ site.phone }}</a><a class="btn btn-ghost-light btn-lg" routerLink="/tariff">View tariff</a></p>
+      <p class="hero-cta"><a class="btn btn-dark btn-lg" [href]="'tel:' + site.phoneIntl">Call {{ site.phone }}</a><a class="btn btn-ghost-light btn-lg" routerLink="/tariff">View tariff</a></p>
       <p class="coverage"><b>We serve:</b> Tamil Nadu · Kerala · Karnataka · Andhra Pradesh · Telangana · Puducherry</p>
     </div>
     <app-booking />
@@ -31,10 +32,7 @@ const POPULAR = ['chennai-to-bangalore', 'bangalore-to-chennai', 'chennai-to-mad
       @for (c of cats; track c.slug) { <a class="card svc" [routerLink]="['/services', c.slug]"><span class="svc-ico" aria-hidden="true">{{ c.icon }}</span><b>{{ c.name }}</b><span class="muted small">{{ c.text }}</span></a> }
     </div></section>
 
-  <section class="wrap sec"><h2>Popular drop taxi routes</h2>
-    <div class="chips">@for (r of popular; track r.slug) {
-      <a class="card chip" [routerLink]="['/drop-taxi', r.slug]"><b>{{ r.from.name }} → {{ r.to.name }}</b><span class="muted">{{ r.km }} km</span><span class="price-sm">from {{ inr(r.price) }}</span></a> }</div>
-    <p><a routerLink="/drop-taxi">See all routes →</a></p></section>
+  <section class="band rx-band"><div class="wrap sec"><app-route-explorer /></div></section>
 
   <section class="band"><div class="wrap sec"><h2>Choose your cab</h2><app-fleet /></div></section>
 

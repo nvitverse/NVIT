@@ -1,10 +1,15 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { env } from './env';
 
 let generated = '';
 const secret = () => {
   if (env.quoteSecret) return env.quoteSecret;
-  if (!generated) { generated = randomBytes(32).toString('hex'); console.warn('[token] QUOTE_SECRET not set; using a random secret for this process (quotes expire on restart).'); }
+  if (!generated) {
+    // Stable across restarts (shared hosts restart often): derived from other server-only secrets when available.
+    const seed = `${env.smtp.pass}|${env.mapsKey}`;
+    if (seed.length > 1) { generated = createHash('sha256').update('dtn-quote|' + seed).digest('hex'); console.warn('[token] QUOTE_SECRET not set; deriving a stable secret from other server secrets. Please set QUOTE_SECRET.'); }
+    else { generated = randomBytes(32).toString('hex'); console.warn('[token] QUOTE_SECRET not set; using a random secret for this process (quotes expire on restart).'); }
+  }
   return generated;
 };
 export function stable(o: unknown): string {

@@ -47,6 +47,8 @@ export class PlaceInputComponent {
   private seq = 0;
 
   onFocus(): void {
+    // keep the field (and its suggestion list) clear of the sticky header / bottom bar
+    setTimeout(() => this.inp?.nativeElement.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60);
     if (!this._place && !this.text) { this.items.set(popularLocal()); this.open.set(true); this.active.set(-1); }
     else if (this.text && !this._place) this.onType(this.text);
   }

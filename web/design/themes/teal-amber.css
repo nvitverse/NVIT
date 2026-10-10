@@ -1,0 +1,3 @@
+/* ORIGINAL THEME (teal + amber) – first version of Drop Taxi Now.
+   To use it again set <html data-theme="teal"> in web/src/index.html (the same values are already built in as html[data-theme="teal"] in src/styles.css). */
+:root,html[data-theme="teal"]{--ink:#14201e;--muted:#5b6a67;--teal:#0b3d3a;--teal2:#14605b;--amber:#f5a524;--amber2:#d98a0b;--bg:#faf7f2;--card:#fff;--line:#e6e1d6;--wa:#1faa59;--r:14px}

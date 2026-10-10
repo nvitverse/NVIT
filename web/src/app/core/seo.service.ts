@@ -24,7 +24,8 @@ export class SeoService {
       description: i.description,
       robots: i.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large',
       'og:type': 'website', 'og:site_name': SITE.brand, 'og:title': i.title, 'og:description': i.description,
-      'og:url': url, 'og:locale': 'en_IN', 'twitter:card': 'summary', 'twitter:title': i.title, 'twitter:description': i.description
+      'og:url': url, 'og:locale': 'en_IN', 'og:image': SITE.url + '/og-default.jpg', 'og:image:width': '1200', 'og:image:height': '630', 'og:image:alt': SITE.brand + ' – one way drop taxi across South India',
+      'twitter:card': 'summary_large_image', 'twitter:title': i.title, 'twitter:description': i.description, 'twitter:image': SITE.url + '/og-default.jpg'
     };
     for (const [k, v] of Object.entries(tags)) {
       const attr = k.startsWith('og:') ? 'property' : 'name';

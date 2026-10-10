@@ -12,6 +12,12 @@
 /terms
 /privacy-policy
 /cancellation-policy
+/refund-policy
+/payment-policy
+/toll-permit
+/luggage-policy
+/pet-travel-policy
+/reviews
 /sitemap
 /services/one-way-taxi
 /services/drop-taxi
@@ -1158,3 +1164,4 @@
 /404
 /thank-you
 /whatsapp
+/track-booking

@@ -1,15 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { VEHICLES, fareFor, inr, rateOf } from '../data';
-import { VehicleIconComponent } from './vehicle-icon.component';
+import { VehicleImgComponent } from './vehicle-img.component';
 
 @Component({
   selector: 'app-fleet',
-  imports: [VehicleIconComponent],
+  imports: [VehicleImgComponent],
   template: `
   <div class="fleet">
     @for (v of vehicles; track v.id) {
       <article class="card vcard">
-        <app-vehicle-icon [type]="v.id" />
+        <app-vehicle-img [type]="v.id" />
         <span class="vtag">{{ v.tag }}</span>
         <h3>{{ v.name }}</h3>
         <p class="muted small">{{ v.models }}</p>

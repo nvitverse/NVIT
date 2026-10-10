@@ -5,6 +5,7 @@ import { cityContent, QA } from '../core/content';
 import { BookingComponent } from '../components/booking.component';
 import { FleetComponent } from '../components/fleet.component';
 import { FaqComponent } from '../components/faq.component';
+import { RouteExplorerComponent } from '../components/route-explorer.component';
 import { CrumbsComponent } from '../components/crumbs.component';
 import { CITY_MAP, City, Route, inr, fareFor } from '../data';
 import { SITE } from '../site.config';
@@ -19,7 +20,7 @@ const META: Record<Mode, { base: string; label: string }> = {
 
 @Component({
   selector: 'app-city',
-  imports: [RouterLink, BookingComponent, FleetComponent, FaqComponent, CrumbsComponent, NotFoundPage],
+  imports: [RouterLink, BookingComponent, FleetComponent, FaqComponent, CrumbsComponent, NotFoundPage, RouteExplorerComponent],
   template: `
   @if (city) {
     <app-crumbs [items]="crumbs" />
@@ -32,6 +33,7 @@ const META: Record<Mode, { base: string; label: string }> = {
       <app-booking [from]="city.slug" />
     </div></section>
 
+    @if (hasRoutes) { <section class="band rx-band"><div class="wrap sec"><app-route-explorer [initialCity]="city.slug" [tabs]="false" /></div></section> }
     <section class="wrap sec"><h2>Popular routes from {{ city.name }}</h2>
       <div class="chips">@for (r of top; track r.slug) {
         <a class="card chip" [routerLink]="['/drop-taxi', r.slug]"><b>{{ r.from.name }} → {{ r.to.name }}</b><span class="muted">{{ r.km }} km</span><span class="price-sm">from {{ inr(fareFor('SEDAN', r.km).total) }}</span></a> }</div></section>
@@ -48,6 +50,7 @@ const META: Record<Mode, { base: string; label: string }> = {
 })
 export class CityPage {
   site = SITE; inr = inr; fareFor = fareFor;
+  hasRoutes = false;
   city?: City; h1 = ''; intro = ''; modeLabel = ''; top: Route[] = []; faqs: QA[] = [];
   crumbs: { name: string; path: string }[] = [];
   private seo = inject(SeoService);
@@ -63,6 +66,7 @@ export class CityPage {
     const c = this.city;
     const content = cityContent(c, mode);
     this.top = content.routes.slice(0, 12);
+    this.hasRoutes = c.hub && content.routes.length > 0;
     this.faqs = content.faqs;
     this.h1 = mode === 'airport' ? `${c.name} Airport Taxi` : `${c.name} ${m.label}`;
     this.intro = mode === 'airport'

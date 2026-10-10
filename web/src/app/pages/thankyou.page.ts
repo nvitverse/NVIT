@@ -12,8 +12,10 @@ import { SITE } from '../site.config';
   imports: [RouterLink, WaChooseComponent],
   template: `
   <section class="wrap sec narrow thanks">
+    <ol class="stepper stepper-done" aria-label="Booking progress"><li class="done"><span>✓</span> Details</li><li class="done"><span>✓</span> Estimate</li><li class="done"><span>✓</span> Confirm</li></ol>
     <div class="tick" aria-hidden="true">✓</div>
-    <h1>Booking request received</h1>
+    <h1>Booking Confirmed!</h1>
+    <p class="muted">Your booking has been placed. We will contact you shortly to confirm your driver and cab.</p>
     @if (s(); as s) {
       <p class="lead dark">Thank you, <b>{{ s.customer.name }}</b>. Your reference is <b class="ref">{{ s.ref }}</b>.</p>
       @if (emailed()) { <p class="ok">We have emailed your booking summary to {{ s.customer.email }}.</p> }
@@ -50,7 +52,7 @@ export class ThankYouPage implements OnInit {
   s = signal<TripSummary | null>(null); ref = signal(''); offline = signal(false); emailed = signal(false);
   private browser = isPlatformBrowser(inject(PLATFORM_ID));
   private route = inject(ActivatedRoute);
-  constructor() { inject(SeoService).set({ title: `Booking received | ${SITE.brand}`, description: 'Your taxi booking request has been received.', path: '/thank-you', noindex: true }); }
+  constructor() { inject(SeoService).set({ title: `Booking confirmed | ${SITE.brand}`, description: 'Your taxi booking has been placed.', path: '/thank-you', noindex: true }); }
   msg = () => { const s = this.s(); return s ? messageToBusiness(s) : ''; };
   ngOnInit(): void {
     this.ref.set(this.route.snapshot.queryParamMap.get('ref') ?? '');
