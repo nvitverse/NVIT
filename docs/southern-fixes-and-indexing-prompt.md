@@ -42,6 +42,12 @@ Do this:
 ### A6. Performance
 Pages weigh 99-148 KB of HTML (fine) but load 19-20 JS files and 16-19 CSS files. Merge/minify/defer where safe (keep behavior), load Maps/Places only on interaction, lazy-load below-the-fold images, WebP + srcset, preload the main font. Target mobile Lighthouse performance >= 90, SEO 100. Report before/after.
 
+### A6b. Tracking IDs (verify with me, change nothing without my answer)
+- Southern's pages load the Google Ads tag `AW-18316947510` on page load (with Consent Mode v2); the same tag id is on drop1taxi.com (`AW-18316947510`, plus GA4 `G-P6D2M8X8Q1` and conversion labels). dropcars.in uses a different Ads id (`AW-17389722138`). No GA4 id was found on Southern's home page.
+- Ask me: does Southern Drop Taxi have its own Google Ads account/conversion actions, or should it share Drop1Taxi's? If it should have its own, tell me which IDs and labels to create; do not paste drop1taxi's labels into Southern. If shared, make sure Southern events carry the brand/site name so reports can separate them.
+- Add GA4 for Southern only when I give you the measurement id. Load tags after first interaction (or after 6 s) instead of on page load, keep Consent Mode, and send the events `fare_check`, `booking_confirmed`, `call_click`, `whatsapp_click`.
+- The only phone number of Southern Drop Taxi is +91 75988 99579. The digits 8316947510 you may see in the page source are part of the Ads tag id, not a phone number; do not treat them as one.
+
 ### A7. Part A acceptance tests (script them in `tools/seo-tests.sh` or `.mjs`, run against production, save `SEO-TESTS-AFTER.txt`)
 - Every sitemap URL: status 200 with no redirect, canonical equals the URL, exactly one H1, unique title and description, valid JSON-LD, `index,follow`, no Set-Cookie, no `__theme`/`__path` anywhere in HTML or links.
 - Legacy and variant URLs (list in A2, trailing slash, uppercase, `/a-to-b`): one 301 hop to a clean 200, or 404.
